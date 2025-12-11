@@ -164,14 +164,14 @@ export default function Infografis({ infografis }: InfografisProps) {
                                         <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] bg-card">
                                             <div className="aspect-video bg-muted relative overflow-hidden">
                                                 <img
-                                                    src={item.thumbnail_url || item.file_url}
+                                                    src={`/infografis/${item.id}/image`}
                                                     alt={item.file_name}
                                                     className="w-full h-full object-contain transition-transform group-hover:scale-105"
                                                     loading="lazy"
                                                     crossOrigin="anonymous"
                                                     referrerPolicy="no-referrer"
                                                     onError={(e) => {
-                                                        // Fallback: try using file_url if thumbnail fails
+                                                        // Fallback: try using file_url if proxy fails
                                                         const target = e.target as HTMLImageElement;
                                                         if (target.src !== item.file_url) {
                                                             target.src = item.file_url;

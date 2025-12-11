@@ -273,7 +273,7 @@ export default function KelolaInfografis({ infografisLink, infografis, success, 
                                     >
                                         <div className="aspect-video bg-muted relative">
                                             <img
-                                                src={item.thumbnail_url || item.file_url}
+                                                src={`/infografis/${item.id}/image`}
                                                 alt={item.file_name}
                                                 className="w-full h-full object-contain"
                                                 loading="lazy"
