@@ -1,0 +1,400 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\NotulensiDate;
+use App\Models\NotulensiLink;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class NotulensiController extends Controller
+{
+    /**
+     * Display the notulensi management page (admin only).
+     */
+    public function index(Request $request): Response
+    {
+        $links = NotulensiLink::orderBy('title')->get()->map(function ($link) {
+            $sheetId = $this->extractSheetId($link->gdrive_url);
+            $totalDates = 0;
+            $totalTabs = 0;
+            
+            if ($sheetId) {
+                $totalDates = NotulensiDate::where('sheet_id', $sheetId)->count();
+                
+                // Get total tabs from sheet info
+                try {
+                    $apiKey = config('services.google.drive_api_key');
+                    if ($apiKey) {
+                        $sheetInfo = $this->getSheetInfo($sheetId, $apiKey);
+                        $totalTabs = count($sheetInfo['sheets']);
+                    }
+                } catch (\Exception $e) {
+                    // Ignore errors, just set to 0
+                }
+            }
+            
+            return [
+                'id' => $link->id,
+                'title' => $link->title,
+                'gdrive_url' => $link->gdrive_url,
+                'created_at' => $link->created_at,
+                'updated_at' => $link->updated_at,
+                'total_tabs' => $totalTabs,
+                'total_dates' => $totalDates,
+            ];
+        });
+
+        return Inertia::render('admin/kelola-notulensi', [
+            'links' => $links,
+            'success' => $request->session()->get('success'),
+        ]);
+    }
+
+    /**
+     * Store a new notulensi link.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'gdrive_url' => ['required', 'url', 'max:500'],
+        ]);
+
+        $link = NotulensiLink::create([
+            'title' => $validated['title'],
+            'gdrive_url' => $validated['gdrive_url'],
+        ]);
+
+        // Auto-scan the sheet immediately
+        try {
+            $sheetId = $this->extractSheetId($validated['gdrive_url']);
+            if ($sheetId) {
+                $this->scanAndSaveNotulensiDates($sheetId, $link->id);
+            }
+            return redirect()->route('kelola-notulensi')->with('success', 'Link notulensi berhasil ditambahkan dan di-scan.');
+        } catch (\Exception $e) {
+            \Log::error('Failed to scan sheet: ' . $e->getMessage());
+            return redirect()->route('kelola-notulensi')->with('success', 'Link berhasil ditambahkan, namun terjadi kesalahan saat scan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update an existing notulensi link.
+     */
+    public function update(Request $request, NotulensiLink $notulensiLink): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'gdrive_url' => ['required', 'url', 'max:500'],
+        ]);
+
+        $notulensiLink->update([
+            'title' => $validated['title'],
+            'gdrive_url' => $validated['gdrive_url'],
+        ]);
+
+        // Re-scan the sheet if URL changed
+        try {
+            $sheetId = $this->extractSheetId($validated['gdrive_url']);
+            if ($sheetId) {
+                $this->scanAndSaveNotulensiDates($sheetId, $notulensiLink->id);
+            }
+            return redirect()->route('kelola-notulensi')->with('success', 'Link notulensi berhasil diperbarui dan di-scan ulang.');
+        } catch (\Exception $e) {
+            \Log::error('Failed to scan sheet: ' . $e->getMessage());
+            return redirect()->route('kelola-notulensi')->with('success', 'Link berhasil diperbarui, namun terjadi kesalahan saat scan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a notulensi link.
+     */
+    public function destroy(NotulensiLink $notulensiLink): RedirectResponse
+    {
+        // Delete all dates associated with this link's sheets
+        $sheetId = $this->extractSheetId($notulensiLink->gdrive_url);
+        if ($sheetId) {
+            NotulensiDate::where('sheet_id', $sheetId)->delete();
+        }
+
+        $notulensiLink->delete();
+
+        return redirect()->route('kelola-notulensi')->with('success', 'Link notulensi berhasil dihapus.');
+    }
+
+    /**
+     * Auto-scan all sheets (API endpoint).
+     */
+    public function autoScanAll(Request $request): JsonResponse
+    {
+        try {
+            $links = NotulensiLink::all();
+            $scannedCount = 0;
+            $errors = [];
+            
+            foreach ($links as $link) {
+                try {
+                    $sheetId = $this->extractSheetId($link->gdrive_url);
+                    if ($sheetId) {
+                        $this->scanAndSaveNotulensiDates($sheetId, $link->id);
+                        $scannedCount++;
+                    }
+                } catch (\Exception $e) {
+                    $errorMsg = "Gagal scan sheet '{$link->title}': " . $e->getMessage();
+                    \Log::error($errorMsg);
+                    $errors[] = $errorMsg;
+                }
+            }
+            
+            $message = "Berhasil scan {$scannedCount} sheet.";
+            if (count($errors) > 0) {
+                $message .= " " . count($errors) . " sheet gagal.";
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'scanned' => $scannedCount,
+                'errors' => $errors,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Auto-scan all failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal melakukan auto-scan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the notulensi calendar page.
+     */
+    public function calendar(Request $request): Response
+    {
+        // Get all notulensi links
+        $links = NotulensiLink::orderBy('title')->get();
+
+        return Inertia::render('notulensi', [
+            'notulensiLinks' => $links,
+        ]);
+    }
+
+    /**
+     * Get all notulensi dates for a month.
+     */
+    public function getMonthNotulensi(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'year' => ['required', 'integer', 'min:2000', 'max:3000'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        $year = $validated['year'];
+        $month = $validated['month'];
+
+        // Get start and end date of the month
+        $startDate = "$year-$month-01";
+        $endDate = date('Y-m-t', strtotime($startDate)); // Last day of month
+
+        // Check if user is authenticated
+        $isAuthenticated = $request->user() !== null;
+
+        // Get all notulensi links to map sheet_id to title
+        $links = NotulensiLink::all()->keyBy(function ($link) {
+            return $this->extractSheetId($link->gdrive_url);
+        });
+
+        // Query all dates in this month
+        $notulensiDates = NotulensiDate::whereBetween('date', [$startDate, $endDate])
+            ->get()
+            ->map(function ($notulensiDate) use ($isAuthenticated, $links) {
+                $sheetLink = $notulensiDate->sheet_link;
+                
+                // If user is not authenticated, convert edit link to view-only (preview) link
+                if (!$isAuthenticated) {
+                    // Convert from: https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit#gid={TAB_ID}
+                    // To: https://docs.google.com/spreadsheets/d/{SHEET_ID}/preview#gid={TAB_ID}
+                    $sheetLink = str_replace('/edit#', '/preview#', $sheetLink);
+                }
+                
+                // Get link title from sheet_id
+                $link = $links->get($notulensiDate->sheet_id);
+                $linkTitle = $link ? $link->title : null;
+                
+                return [
+                    'date' => $notulensiDate->date->format('Y-m-d'),
+                    'sheet_id' => $notulensiDate->sheet_id,
+                    'sheet_link' => $sheetLink,
+                    'tab_name' => $notulensiDate->tab_name,
+                    'link_title' => $linkTitle,
+                ];
+            });
+
+        // Organize by date - now supports multiple notulensi per date
+        $result = [];
+        foreach ($notulensiDates as $notulensiDate) {
+            $date = $notulensiDate['date'];
+            if (!isset($result[$date])) {
+                $result[$date] = [];
+            }
+            $result[$date][] = [
+                'sheet_id' => $notulensiDate['sheet_id'],
+                'sheet_link' => $notulensiDate['sheet_link'],
+                'tab_name' => $notulensiDate['tab_name'],
+                'link_title' => $notulensiDate['link_title'],
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'year' => $year,
+            'month' => $month,
+            'notulensi' => $result,
+        ]);
+    }
+
+    /**
+     * Scan Google Sheet and save all date tabs to database.
+     */
+    private function scanAndSaveNotulensiDates(string $sheetId, int $linkId): void
+    {
+        // Delete existing dates for this sheet only
+        NotulensiDate::where('sheet_id', $sheetId)->delete();
+
+        $apiKey = config('services.google.drive_api_key');
+        if (!$apiKey) {
+            throw new \Exception('Google Drive API key belum dikonfigurasi.');
+        }
+
+        // Get sheet metadata using Google Sheets API v4
+        $sheetInfo = $this->getSheetInfo($sheetId, $apiKey);
+        $sheets = $sheetInfo['sheets'];
+
+        // Parse and save each tab
+        foreach ($sheets as $sheet) {
+            $date = $this->parseDateFromTabName($sheet['title']);
+            if ($date) {
+                $sheetLink = "https://docs.google.com/spreadsheets/d/{$sheetId}/edit#gid={$sheet['sheetId']}";
+                
+                NotulensiDate::updateOrCreate(
+                    [
+                        'date' => $date,
+                        'sheet_id' => $sheetId,
+                    ],
+                    [
+                        'notulensi_link_id' => $linkId,
+                        'tab_name' => $sheet['title'],
+                        'tab_id' => $sheet['sheetId'],
+                        'sheet_link' => $sheetLink,
+                    ]
+                );
+            }
+        }
+    }
+
+    /**
+     * Extract Sheet ID from Google Sheets URL.
+     */
+    private function extractSheetId(string $url): ?string
+    {
+        // Format: https://docs.google.com/spreadsheets/d/SHEET_ID/edit
+        if (preg_match('/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            return $matches[1];
+        }
+        return null;
+    }
+
+    /**
+     * Get sheet info including title and tabs.
+     */
+    private function getSheetInfo(string $sheetId, string $apiKey): array
+    {
+        $url = "https://sheets.googleapis.com/v4/spreadsheets/{$sheetId}";
+
+        $verifySSL = env('GOOGLE_DRIVE_VERIFY_SSL', env('APP_ENV') === 'production');
+
+        $response = Http::withOptions([
+            'verify' => $verifySSL,
+            'headers' => [
+                'Referer' => request()->getSchemeAndHttpHost(),
+            ],
+        ])->get($url, [
+            'fields' => 'properties.title,sheets.properties',
+            'key' => $apiKey,
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $sheets = [];
+            
+            if (isset($data['sheets'])) {
+                foreach ($data['sheets'] as $sheet) {
+                    if (isset($sheet['properties'])) {
+                        $props = $sheet['properties'];
+                        $sheets[] = [
+                            'sheetId' => $props['sheetId'],
+                            'title' => $props['title'],
+                        ];
+                    }
+                }
+            }
+            
+            return [
+                'title' => $data['properties']['title'] ?? '',
+                'sheets' => $sheets,
+            ];
+        }
+
+        throw new \Exception('Gagal mengambil data dari Google Sheets API: ' . ($response->json()['error']['message'] ?? 'Unknown error'));
+    }
+
+    /**
+     * Parse date from tab name.
+     * Supports formats: "11 Des 2025", "7 Desember 2025", etc.
+     */
+    private function parseDateFromTabName(string $tabName): ?string
+    {
+        // Indonesian month names
+        $months = [
+            'januari' => '01', 'jan' => '01',
+            'februari' => '02', 'feb' => '02',
+            'maret' => '03', 'mar' => '03',
+            'april' => '04', 'apr' => '04',
+            'mei' => '05', 'may' => '05',
+            'juni' => '06', 'jun' => '06',
+            'juli' => '07', 'jul' => '07',
+            'agustus' => '08', 'agu' => '08', 'aug' => '08',
+            'september' => '09', 'sep' => '09',
+            'oktober' => '10', 'okt' => '10', 'oct' => '10',
+            'november' => '11', 'nov' => '11',
+            'desember' => '12', 'des' => '12', 'dec' => '12',
+        ];
+
+        // Normalize tab name
+        $normalized = strtolower(trim($tabName));
+        $normalized = preg_replace('/\s+/', ' ', $normalized);
+
+        // Try format: "11 Des 2025" or "11 Desember 2025"
+        if (preg_match('/^(\d+)\s+([a-z]+)\s+(\d{4})$/', $normalized, $matches)) {
+            $day = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+            $monthName = $matches[2];
+            $year = $matches[3];
+
+            if (isset($months[$monthName])) {
+                $month = $months[$monthName];
+                $date = "$year-$month-$day";
+                
+                if (checkdate((int)$month, (int)$day, (int)$year)) {
+                    return $date;
+                }
+            }
+        }
+
+        return null;
+    }
+}
