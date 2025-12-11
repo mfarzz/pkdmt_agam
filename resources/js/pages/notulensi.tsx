@@ -43,10 +43,6 @@ export default function Notulensi({ notulensiLinks = [] }: NotulensiProps) {
             name: 'Informasi',
             link: '/informasi',
         },
-        {
-            name: 'Layanan',
-            link: '/',
-        },
     ];
 
     // Fungsi untuk mendapatkan semua hari dalam bulan

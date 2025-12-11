@@ -341,10 +341,6 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
             name: 'Informasi',
             link: '/informasi',
         },
-        {
-            name: 'Layanan',
-            link: '/',
-        },
     ];
 
     const dmtDataList = dmtData?.data || [];
@@ -589,7 +585,7 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                                         {/* Next Button */}
                                         {dmtData.current_page < dmtData.last_page && paginationLinks[paginationLinks.length - 1]?.url && (
                                             <Link
-                                                href={paginationLinks[paginationLinks.length - 1].url}
+                                                href={paginationLinks[paginationLinks.length - 1].url as string}
                                                 className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
                                                 preserveScroll
                                             >

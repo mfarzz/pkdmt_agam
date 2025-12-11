@@ -14,10 +14,6 @@ export default function PanduanEmt() {
             name: 'Informasi',
             link: '/informasi',
         },
-        {
-            name: 'Layanan',
-            link: '/',
-        },
     ];
 
 

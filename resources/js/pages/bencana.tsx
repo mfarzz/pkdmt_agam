@@ -74,10 +74,6 @@ export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
             name: 'Informasi',
             link: '/informasi',
         },
-        {
-            name: 'Layanan',
-            link: '/',
-        },
     ];
 
     return (

@@ -66,10 +66,6 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
             name: 'Informasi',
             link: '/informasi',
         },
-        {
-            name: 'Layanan',
-            link: '/',
-        },
     ];
 
     // Fungsi untuk mendapatkan semua hari dalam bulan

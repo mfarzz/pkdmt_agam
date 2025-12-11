@@ -43,10 +43,6 @@ export default function Infografis({ infografis }: InfografisProps) {
             name: 'Informasi',
             link: '/informasi',
         },
-        {
-            name: 'Layanan',
-            link: '/',
-        },
     ];
 
     // Auto-scan infografis folder on page load - using same logic as scan button
@@ -259,7 +255,7 @@ export default function Infografis({ infografis }: InfografisProps) {
                                     {/* Next Button */}
                                     {infografis.current_page < infografis.last_page && paginationLinks[paginationLinks.length - 1]?.url && (
                                         <Link
-                                            href={paginationLinks[paginationLinks.length - 1].url}
+                                            href={paginationLinks[paginationLinks.length - 1].url as string}
                                             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
                                         >
                                             Selanjutnya
@@ -278,6 +274,7 @@ export default function Infografis({ infografis }: InfografisProps) {
                         </>
                     )}
                 </div>
+                <AppFooter />
             </div>
         </>
     );
