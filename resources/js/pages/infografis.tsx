@@ -54,13 +54,21 @@ export default function Infografis({ infografis }: InfografisProps) {
         }
 
         const autoScan = async () => {
+            // Ambil CSRF token dari cookie (Laravel XSRF-TOKEN)
+            const csrfToken = document.cookie
+                .split('; ')
+                .find((row) => row.startsWith('XSRF-TOKEN='))
+                ?.split('=')[1];
+
             try {
                 const response = await fetch('/infografis/auto-scan', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Accept': 'application/json',
+                        'X-XSRF-TOKEN': csrfToken ? decodeURIComponent(csrfToken) : '',
                     },
+                    credentials: 'same-origin',
                 });
 
                 if (response.ok) {
