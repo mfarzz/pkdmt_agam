@@ -1,18 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
-import { useEffect } from 'react';
-import AppNavbar from '@/components/app-navbar';
 import AppFooter from '@/components/app-footer';
+import AppNavbar from '@/components/app-navbar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Phone, Mail, Eye, Users, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Dialog,
     DialogContent,
@@ -21,8 +11,17 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Head, Link } from '@inertiajs/react';
+import { CheckCircle, ChevronLeft, ChevronRight, Eye, Mail, Phone, Users, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface DmtData {
     id: number;
@@ -81,6 +80,7 @@ interface InformasiProps {
         total_selesai: number;
         total_tim: number;
     };
+    activeDisasterName?: string;
 }
 
 function formatDate(dateString: string | null): string {
@@ -221,42 +221,42 @@ function DetailDialog({ dmt }: { dmt: DmtData }) {
                         dmt.kapasitas_rawat_inap !== null ||
                         dmt.kapasitas_operasi_bedah_mayor !== null ||
                         dmt.kapasitas_operasi_bedah_minor !== null) && (
-                        <div>
-                            <h3 className="font-semibold text-lg mb-3">Kapasitas Layanan</h3>
-                            <div className="grid grid-cols-4 gap-4 text-sm">
-                                {dmt.kapasitas_rawat_jalan !== null && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-xl font-bold">{dmt.kapasitas_rawat_jalan}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Rawat Jalan/hari</div>
-                                    </div>
-                                )}
-                                {dmt.kapasitas_rawat_inap !== null && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-xl font-bold">{dmt.kapasitas_rawat_inap}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Rawat Inap/hari</div>
-                                    </div>
-                                )}
-                                {dmt.kapasitas_operasi_bedah_mayor !== null && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-xl font-bold">{dmt.kapasitas_operasi_bedah_mayor}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Bedah Mayor/hari</div>
-                                    </div>
-                                )}
-                                {dmt.kapasitas_operasi_bedah_minor !== null && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-xl font-bold">{dmt.kapasitas_operasi_bedah_minor}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Bedah Minor/hari</div>
+                            <div>
+                                <h3 className="font-semibold text-lg mb-3">Kapasitas Layanan</h3>
+                                <div className="grid grid-cols-4 gap-4 text-sm">
+                                    {dmt.kapasitas_rawat_jalan !== null && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-xl font-bold">{dmt.kapasitas_rawat_jalan}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Rawat Jalan/hari</div>
+                                        </div>
+                                    )}
+                                    {dmt.kapasitas_rawat_inap !== null && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-xl font-bold">{dmt.kapasitas_rawat_inap}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Rawat Inap/hari</div>
+                                        </div>
+                                    )}
+                                    {dmt.kapasitas_operasi_bedah_mayor !== null && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-xl font-bold">{dmt.kapasitas_operasi_bedah_mayor}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Bedah Mayor/hari</div>
+                                        </div>
+                                    )}
+                                    {dmt.kapasitas_operasi_bedah_minor !== null && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-xl font-bold">{dmt.kapasitas_operasi_bedah_minor}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Bedah Minor/hari</div>
+                                        </div>
+                                    )}
+                                </div>
+                                {dmt.jenis_layanan_tersedia && (
+                                    <div className="mt-4 text-sm">
+                                        <span className="text-muted-foreground">Jenis Layanan: </span>
+                                        <span className="font-medium">{dmt.jenis_layanan_tersedia}</span>
                                     </div>
                                 )}
                             </div>
-                            {dmt.jenis_layanan_tersedia && (
-                                <div className="mt-4 text-sm">
-                                    <span className="text-muted-foreground">Jenis Layanan: </span>
-                                    <span className="font-medium">{dmt.jenis_layanan_tersedia}</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        )}
 
                     {/* Tenaga Medis */}
                     {(dmt.jumlah_dokter_umum !== null ||
@@ -265,73 +265,73 @@ function DetailDialog({ dmt }: { dmt: DmtData }) {
                         dmt.jumlah_bidan !== null ||
                         dmt.jumlah_apoteker !== null ||
                         dmt.jumlah_psikolog !== null) && (
-                        <div>
-                            <h3 className="font-semibold text-lg mb-3">Tenaga Medis</h3>
-                            <div className="grid grid-cols-4 gap-4 text-sm">
-                                {dmt.jumlah_dokter_umum !== null && dmt.jumlah_dokter_umum > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_dokter_umum}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Dokter Umum</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_perawat !== null && dmt.jumlah_perawat > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_perawat}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Perawat</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_bidan !== null && dmt.jumlah_bidan > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_bidan}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Bidan</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_apoteker !== null && dmt.jumlah_apoteker > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_apoteker}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Apoteker</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_psikolog !== null && dmt.jumlah_psikolog > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_psikolog}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Psikolog</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_staf_logistik !== null && dmt.jumlah_staf_logistik > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_staf_logistik}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Staf Logistik</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_staf_administrasi !== null && dmt.jumlah_staf_administrasi > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_staf_administrasi}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Staf Administrasi</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_petugas_keamanan !== null && dmt.jumlah_petugas_keamanan > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_petugas_keamanan}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Petugas Keamanan</div>
+                            <div>
+                                <h3 className="font-semibold text-lg mb-3">Tenaga Medis</h3>
+                                <div className="grid grid-cols-4 gap-4 text-sm">
+                                    {dmt.jumlah_dokter_umum !== null && dmt.jumlah_dokter_umum > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_dokter_umum}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Dokter Umum</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_perawat !== null && dmt.jumlah_perawat > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_perawat}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Perawat</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_bidan !== null && dmt.jumlah_bidan > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_bidan}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Bidan</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_apoteker !== null && dmt.jumlah_apoteker > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_apoteker}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Apoteker</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_psikolog !== null && dmt.jumlah_psikolog > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_psikolog}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Psikolog</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_staf_logistik !== null && dmt.jumlah_staf_logistik > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_staf_logistik}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Staf Logistik</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_staf_administrasi !== null && dmt.jumlah_staf_administrasi > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_staf_administrasi}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Staf Administrasi</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_petugas_keamanan !== null && dmt.jumlah_petugas_keamanan > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_petugas_keamanan}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Petugas Keamanan</div>
+                                        </div>
+                                    )}
+                                </div>
+                                {dmt.rincian_dokter_spesialis && (
+                                    <div className="mt-4 text-sm">
+                                        <span className="text-muted-foreground">Dokter Spesialis: </span>
+                                        <span className="font-medium">{dmt.rincian_dokter_spesialis}</span>
                                     </div>
                                 )}
                             </div>
-                            {dmt.rincian_dokter_spesialis && (
-                                <div className="mt-4 text-sm">
-                                    <span className="text-muted-foreground">Dokter Spesialis: </span>
-                                    <span className="font-medium">{dmt.rincian_dokter_spesialis}</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        )}
                 </div>
             </DialogContent>
         </Dialog>
     );
 }
 
-export default function Informasi({ dmtData, statistics }: InformasiProps) {
+export default function Informasi({ dmtData, statistics, activeDisasterName }: InformasiProps) {
     const navItems = [
         {
             name: 'Beranda',
@@ -393,7 +393,7 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                             Informasi Disaster Medical Team (DMT)
                         </h1>
                         <p className="mt-2 text-lg text-muted-foreground">
-                            Data tim medis yang bertugas di Kabupaten Agam
+                            {activeDisasterName ? `Data tim medis yang bertugas di ${activeDisasterName}` : 'Data tim medis yang bertugas di Kabupaten Agam'}
                         </p>
                     </div>
 
@@ -569,11 +569,10 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                                                     <Link
                                                         key={link.url}
                                                         href={link.url}
-                                                        className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                                                            link.active
-                                                                ? 'border-primary bg-primary text-primary-foreground'
-                                                                : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
-                                                        }`}
+                                                        className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${link.active
+                                                            ? 'border-primary bg-primary text-primary-foreground'
+                                                            : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                                                            }`}
                                                         preserveScroll
                                                     >
                                                         {link.label}

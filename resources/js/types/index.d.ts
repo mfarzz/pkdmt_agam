@@ -1,8 +1,22 @@
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
 
+export interface Disaster {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Auth {
     user: User;
+    activeDisaster?: {
+        id: number;
+        name: string;
+    };
 }
 
 export interface BreadcrumbItem {
@@ -27,6 +41,7 @@ export interface SharedData {
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;
+    disasters_list: Disaster[];
     [key: string]: unknown;
 }
 

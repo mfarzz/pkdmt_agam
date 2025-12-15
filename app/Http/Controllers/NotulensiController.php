@@ -18,7 +18,12 @@ class NotulensiController extends Controller
      */
     public function index(Request $request): Response
     {
-        $links = NotulensiLink::orderBy('title')->get()->map(function ($link) {
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        
+        $links = NotulensiLink::where('disaster_id', $disasterId)
+            ->orderBy('title')
+            ->get()
+            ->map(function ($link) {
             $sheetId = $this->extractSheetId($link->gdrive_url);
             $totalDates = 0;
             $totalTabs = 0;
@@ -68,6 +73,7 @@ class NotulensiController extends Controller
         $link = NotulensiLink::create([
             'title' => $validated['title'],
             'gdrive_url' => $validated['gdrive_url'],
+            'disaster_id' => $request->session()->get('admin_active_disaster_id'),
         ]);
 
         // Auto-scan the sheet immediately
@@ -133,7 +139,10 @@ class NotulensiController extends Controller
     public function autoScanAll(Request $request): JsonResponse
     {
         try {
-            $links = NotulensiLink::all();
+            $links = NotulensiLink::whereHas('disaster', function($q) {
+                $q->where('is_active', true);
+            })->get();
+            
             $scannedCount = 0;
             $errors = [];
             
@@ -176,11 +185,17 @@ class NotulensiController extends Controller
      */
     public function calendar(Request $request): Response
     {
-        // Get all notulensi links
-        $links = NotulensiLink::orderBy('title')->get();
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+        
+        // Get all notulensi links for active disaster
+        $links = $activeDisaster
+            ? NotulensiLink::where('disaster_id', $activeDisaster->id)->orderBy('title')->get()
+            : collect([]);
 
         return Inertia::render('notulensi', [
             'notulensiLinks' => $links,
+            'activeDisasterName' => $activeDisaster ? $activeDisaster->name : null,
         ]);
     }
 
@@ -204,13 +219,29 @@ class NotulensiController extends Controller
         // Check if user is authenticated
         $isAuthenticated = $request->user() !== null;
 
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+        if (!$activeDisaster) {
+            return response()->json([
+                'success' => true,
+                'year' => $year,
+                'month' => $month,
+                'notulensi' => [],
+            ]);
+        }
+
         // Get all notulensi links to map sheet_id to title
-        $links = NotulensiLink::all()->keyBy(function ($link) {
+        $links = NotulensiLink::where('disaster_id', $activeDisaster->id)
+            ->get()
+            ->keyBy(function ($link) {
             return $this->extractSheetId($link->gdrive_url);
         });
 
         // Query all dates in this month
-        $notulensiDates = NotulensiDate::whereBetween('date', [$startDate, $endDate])
+        $notulensiDates = NotulensiDate::whereHas('notulensiLink', function($q) use ($activeDisaster) {
+                $q->where('disaster_id', $activeDisaster->id);
+            })
+            ->whereBetween('date', [$startDate, $endDate])
             ->get()
             ->map(function ($notulensiDate) use ($isAuthenticated, $links) {
                 $sheetLink = $notulensiDate->sheet_link;

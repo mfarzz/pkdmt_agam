@@ -18,12 +18,16 @@ class InfografisController extends Controller
      */
     public function index(Request $request): Response
     {
-        $infografisLink = InfografisLink::first();
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        $infografisLink = InfografisLink::where('disaster_id', $disasterId)->first();
+        
         $perPage = $request->get('per_page', 12);
         $page = $request->get('page', 1);
 
-        // Get all infografis and sort naturally in PHP
-        $allInfografis = Infografis::get()->map(function ($item) {
+        // Get all infografis for this link
+        $query = $infografisLink ? Infografis::where('infografis_link_id', $infografisLink->id) : Infografis::whereRaw('1 = 0');
+        
+        $allInfografis = $query->get()->map(function ($item) {
             // Ensure URL format is correct for embedding
             $item->file_url = $this->ensureCorrectImageUrl($item->file_id, $item->file_url);
             $item->thumbnail_url = $item->thumbnail_url ? $this->ensureCorrectImageUrl($item->file_id, $item->thumbnail_url) : $item->file_url;
@@ -62,8 +66,19 @@ class InfografisController extends Controller
         $perPage = $request->get('per_page', 12);
         $page = $request->get('page', 1);
 
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+        
+        $query = Infografis::whereRaw('1 = 0');
+        
+        if ($activeDisaster) {
+            $query = Infografis::whereHas('infografisLink', function($q) use ($activeDisaster) {
+                $q->where('disaster_id', $activeDisaster->id);
+            });
+        }
+
         // Get all infografis and sort naturally in PHP
-        $allInfografis = Infografis::get()->map(function ($item) {
+        $allInfografis = $query->get()->map(function ($item) {
             // Ensure URL format is correct for embedding
             $item->file_url = $this->ensureCorrectImageUrl($item->file_id, $item->file_url);
             $item->thumbnail_url = $item->thumbnail_url ? $this->ensureCorrectImageUrl($item->file_id, $item->thumbnail_url) : $item->file_url;
@@ -90,6 +105,7 @@ class InfografisController extends Controller
 
         return Inertia::render('infografis', [
             'infografis' => $infografis,
+            'activeDisasterName' => $activeDisaster ? $activeDisaster->name : null,
         ]);
     }
 
@@ -116,8 +132,10 @@ class InfografisController extends Controller
             'gdrive_url' => ['required', 'url', 'max:500'],
         ]);
 
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+
         $infografisLink = InfografisLink::updateOrCreate(
-            ['id' => 1], // Only one link allowed
+            ['disaster_id' => $disasterId],
             ['gdrive_url' => $validated['gdrive_url']]
         );
 
@@ -138,7 +156,8 @@ class InfografisController extends Controller
      */
     public function scan(Request $request): RedirectResponse
     {
-        $infografisLink = InfografisLink::first();
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        $infografisLink = InfografisLink::where('disaster_id', $disasterId)->first();
         
         if (!$infografisLink) {
             return redirect()->route('kelola-infografis')->with('error', 'Link Google Drive folder belum diatur.');
@@ -159,7 +178,16 @@ class InfografisController extends Controller
     public function autoScan(Request $request): JsonResponse
     {
         try {
-            $infografisLink = InfografisLink::first();
+            // Get active disaster
+            $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+            if (!$activeDisaster) {
+                 return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada bencana aktif.',
+                ], 404);
+            }
+
+            $infografisLink = InfografisLink::where('disaster_id', $activeDisaster->id)->first();
             
             if (!$infografisLink) {
                 return response()->json([

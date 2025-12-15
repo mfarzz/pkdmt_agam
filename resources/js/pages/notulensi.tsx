@@ -1,16 +1,16 @@
-import { Head, Link } from '@inertiajs/react';
-import { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ArrowLeft, FileText, ExternalLink } from 'lucide-react';
+import AppFooter from '@/components/app-footer';
+import AppNavbar from '@/components/app-navbar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import AppNavbar from '@/components/app-navbar';
-import AppFooter from '@/components/app-footer';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, FileText } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface NotulensiItem {
     sheet_id: string;
@@ -27,9 +27,10 @@ interface NotulensiLink {
 
 interface NotulensiProps {
     notulensiLinks?: NotulensiLink[];
+    activeDisasterName?: string;
 }
 
-export default function Notulensi({ notulensiLinks = [] }: NotulensiProps) {
+export default function Notulensi({ notulensiLinks = [], activeDisasterName }: NotulensiProps) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [notulensiData, setNotulensiData] = useState<Record<string, NotulensiItem[]>>({});
     const [loadingNotulensi, setLoadingNotulensi] = useState(false);
@@ -251,7 +252,7 @@ export default function Notulensi({ notulensiLinks = [] }: NotulensiProps) {
                                         Notulensi Rapat Koordinasi
                                     </h1>
                                     <p className="text-xs text-muted-foreground">
-                                        Kalender Rekap Bulanan
+                                        {activeDisasterName ? `Kalender Notulensi ${activeDisasterName}` : 'Kalender Notulensi Bulanan'}
                                     </p>
                                 </div>
                             </div>
@@ -310,7 +311,7 @@ export default function Notulensi({ notulensiLinks = [] }: NotulensiProps) {
                                     Notulensi Rapat Koordinasi
                                 </h1>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    Kalender Rekap Bulanan
+                                    {activeDisasterName ? `Kalender Notulensi ${activeDisasterName}` : 'Kalender Notulensi Bulanan'}
                                 </p>
                             </div>
 
@@ -384,19 +385,17 @@ export default function Notulensi({ notulensiLinks = [] }: NotulensiProps) {
                                         return (
                                             <div
                                                 key={index}
-                                                className={`min-h-[120px] border-b border-r border-border p-2 last:border-r-0 ${
-                                                    !currentMonth ? 'bg-muted' : ''
-                                                }`}
+                                                className={`min-h-[120px] border-b border-r border-border p-2 last:border-r-0 ${!currentMonth ? 'bg-muted' : ''
+                                                    }`}
                                             >
                                                 {/* Date Number */}
                                                 <div
-                                                    className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${
-                                                        today
-                                                            ? 'bg-primary text-primary-foreground'
-                                                            : currentMonth
-                                                              ? 'text-foreground'
-                                                              : 'text-muted-foreground'
-                                                    }`}
+                                                    className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${today
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : currentMonth
+                                                            ? 'text-foreground'
+                                                            : 'text-muted-foreground'
+                                                        }`}
                                                 >
                                                     {date.getDate()}
                                                 </div>
@@ -421,28 +420,28 @@ export default function Notulensi({ notulensiLinks = [] }: NotulensiProps) {
                                                                             </span>
                                                                         </button>
                                                                     </PopoverTrigger>
-                                                                <PopoverContent className="w-80" align="start">
-                                                                    <div className="space-y-3">
-                                                                        <div className="font-semibold text-sm">
-                                                                            {item.link_title && (
-                                                                                <div className="text-muted-foreground text-xs mb-1">
-                                                                                    {item.link_title}
-                                                                                </div>
-                                                                            )}
-                                                                            Notulensi {item.tab_name}
+                                                                    <PopoverContent className="w-80" align="start">
+                                                                        <div className="space-y-3">
+                                                                            <div className="font-semibold text-sm">
+                                                                                {item.link_title && (
+                                                                                    <div className="text-muted-foreground text-xs mb-1">
+                                                                                        {item.link_title}
+                                                                                    </div>
+                                                                                )}
+                                                                                Notulensi {item.tab_name}
+                                                                            </div>
+                                                                            <a
+                                                                                href={item.sheet_link || '#'}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors p-2 rounded hover:bg-muted"
+                                                                            >
+                                                                                <FileText className="h-4 w-4" />
+                                                                                <span className="flex-1">Buka Notulensi</span>
+                                                                                <ExternalLink className="h-4 w-4" />
+                                                                            </a>
                                                                         </div>
-                                                                        <a
-                                                                            href={item.sheet_link || '#'}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors p-2 rounded hover:bg-muted"
-                                                                        >
-                                                                            <FileText className="h-4 w-4" />
-                                                                            <span className="flex-1">Buka Notulensi</span>
-                                                                            <ExternalLink className="h-4 w-4" />
-                                                                        </a>
-                                                                    </div>
-                                                                </PopoverContent>
+                                                                    </PopoverContent>
                                                                 </Popover>
                                                             );
                                                         })}
@@ -479,19 +478,17 @@ export default function Notulensi({ notulensiLinks = [] }: NotulensiProps) {
                                         return (
                                             <div
                                                 key={index}
-                                                className={`min-h-[60px] border-b border-r border-border p-1 last:border-r-0 ${
-                                                    !currentMonth ? 'bg-muted' : ''
-                                                }`}
+                                                className={`min-h-[60px] border-b border-r border-border p-1 last:border-r-0 ${!currentMonth ? 'bg-muted' : ''
+                                                    }`}
                                             >
                                                 {/* Date Number */}
                                                 <div
-                                                    className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium mb-0.5 ${
-                                                        today
-                                                            ? 'bg-primary text-primary-foreground'
-                                                            : currentMonth
-                                                              ? 'text-foreground'
-                                                              : 'text-muted-foreground'
-                                                    }`}
+                                                    className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium mb-0.5 ${today
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : currentMonth
+                                                            ? 'text-foreground'
+                                                            : 'text-muted-foreground'
+                                                        }`}
                                                 >
                                                     {date.getDate()}
                                                 </div>

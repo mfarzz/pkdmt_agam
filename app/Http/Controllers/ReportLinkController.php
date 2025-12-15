@@ -18,7 +18,12 @@ class ReportLinkController extends Controller
      */
     public function index(Request $request): Response
     {
-        $links = ReportLink::orderBy('title')->get()->map(function ($link) {
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        
+        $links = ReportLink::where('disaster_id', $disasterId)
+            ->orderBy('title')
+            ->get()
+            ->map(function ($link) {
             $totalDates = ReportDate::where('report_link_id', $link->id)->count();
             
             return [
@@ -53,6 +58,7 @@ class ReportLinkController extends Controller
             'title' => $validated['title'],
             'is_public' => $validated['is_public'] ?? true,
             'gdrive_url' => $validated['gdrive_url'],
+            'disaster_id' => $request->session()->get('admin_active_disaster_id'),
         ]);
 
         // Auto-scan the PDF folder immediately

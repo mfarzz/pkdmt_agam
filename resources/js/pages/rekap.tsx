@@ -1,19 +1,19 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ArrowLeft, FileText, Download } from 'lucide-react';
+import AppFooter from '@/components/app-footer';
+import AppNavbar from '@/components/app-navbar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import AppNavbar from '@/components/app-navbar';
-import AppFooter from '@/components/app-footer';
+import { Skeleton } from '@/components/ui/skeleton';
 import { type SharedData } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Download, FileText } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface ReportData {
     folder_link: string | null;
@@ -30,9 +30,10 @@ interface ReportLink {
 
 interface RekapProps {
     reportLinks?: ReportLink[];
+    activeDisasterName?: string;
 }
 
-export default function Rekap({ reportLinks = [] }: RekapProps) {
+export default function Rekap({ reportLinks = [], activeDisasterName }: RekapProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const isAuthenticated = !!auth?.user;
@@ -298,7 +299,7 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
                                         Rekap Data
                                     </h1>
                                     <p className="text-xs text-muted-foreground">
-                                        Kalender Rekap Bulanan
+                                        {activeDisasterName ? `Kalender Rekap ${activeDisasterName}` : 'Kalender Rekap Bulanan'}
                                     </p>
                                 </div>
                             </div>
@@ -380,7 +381,7 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
                                     Rekap Data
                                 </h1>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    Kalender Rekap Bulanan
+                                    {activeDisasterName ? `Kalender Rekap ${activeDisasterName}` : 'Kalender Rekap Bulanan'}
                                 </p>
                             </div>
 
@@ -449,250 +450,244 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
                         {/* Konten Utama - Kalender */}
                         <div className="flex-1 min-w-0">
 
-                    {/* Calendar Month View - Desktop */}
-                    <Card className="hidden md:block overflow-hidden gap-0 p-0">
-                        {/* Week Days Header */}
-                        <div className="grid grid-cols-7 border-b border-border">
-                            {weekDays.map((day, index) => (
-                                <div
-                                    key={index}
-                                    className="border-r border-border p-3 text-center text-sm font-semibold last:border-r-0"
-                                >
-                                    {day.substring(0, 3).toUpperCase()}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Calendar Grid */}
-                        <div className="grid grid-cols-7">
-                            {getCalendarDays.map((date, index) => {
-                                const today = isToday(date);
-                                const currentMonth = isCurrentMonth(date);
-                                const availableLinks = getAvailableLinks(date);
-                                const filteredLinks = availableLinks.filter(link =>
-                                    selectedLinkIds.includes(link.id)
-                                );
-
-                                return (
-                                    <div
-                                        key={index}
-                                        className={`min-h-[120px] border-b border-r border-border p-2 last:border-r-0 ${
-                                            !currentMonth ? 'bg-muted' : ''
-                                        }`}
-                                    >
-                                        {/* Date Number */}
+                            {/* Calendar Month View - Desktop */}
+                            <Card className="hidden md:block overflow-hidden gap-0 p-0">
+                                {/* Week Days Header */}
+                                <div className="grid grid-cols-7 border-b border-border">
+                                    {weekDays.map((day, index) => (
                                         <div
-                                            className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${
-                                                today
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : currentMonth
-                                                      ? 'text-foreground'
-                                                      : 'text-muted-foreground'
-                                            }`}
+                                            key={index}
+                                            className="border-r border-border p-3 text-center text-sm font-semibold last:border-r-0"
                                         >
-                                            {date.getDate()}
+                                            {day.substring(0, 3).toUpperCase()}
                                         </div>
-
-                                        {/* Report Links */}
-                                        <div className="space-y-1 mt-1">
-                                            {loadingReports && currentMonth ? (
-                                                <Skeleton className="h-6 w-full rounded" />
-                                            ) : filteredLinks.map((link) => {
-                                                const dateStr = date.toISOString().split('T')[0];
-                                                const key = `${dateStr}-${link.id}`;
-                                                const data = reportData[key];
-                                                const isLoading = loadingFiles[key];
-                                                const hasFolder = data && data.folder_link !== null;
-
-                                                return (
-                                                    <Popover key={link.id} onOpenChange={(open: boolean) => {
-                                                        if (open && !data && !isLoading) {
-                                                            loadReportFolder(date, link.id);
-                                                        }
-                                                    }}>
-                                                        <PopoverTrigger asChild>
-                                                            <button
-                                                                className={`w-full truncate rounded px-1.5 py-0.5 text-xs transition-colors cursor-pointer text-left ${
-                                                                    link.is_public
-                                                                        ? 'bg-green-500/20 text-green-700 hover:bg-green-500/30'
-                                                                        : 'bg-blue-500/20 text-blue-700 hover:bg-blue-500/30'
-                                                                }`}
-                                                            >
-                                                                {isLoading ? (
-                                                                    <span className="text-xs">Memuat...</span>
-                                                                ) : (
-                                                                    <span className="font-medium">
-                                                                        {data?.title || link.title}
-                                                                    </span>
-                                                                )}
-                                                            </button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-80" align="start">
-                                                            <div className="space-y-3">
-                                                                <div className="font-semibold text-sm">
-                                                                    {data?.title || link.title}
-                                                                </div>
-                                                                {isLoading ? (
-                                                                    <div className="text-sm text-muted-foreground">Memuat...</div>
-                                                                ) : hasFolder ? (
-                                                                    <a
-                                                                        href={data.folder_link!}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors p-2 rounded hover:bg-muted"
-                                                                    >
-                                                                        <FileText className="h-4 w-4" />
-                                                                        <span className="flex-1">Buka Folder PDF</span>
-                                                                        <Download className="h-4 w-4" />
-                                                                    </a>
-                                                                ) : (
-                                                                    <div className="text-sm text-muted-foreground">
-                                                                        Tidak ada folder untuk tanggal ini
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </PopoverContent>
-                                                    </Popover>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </Card>
-
-                    {/* Calendar Grid View - Mobile (Compact) */}
-                    <Card className="md:hidden overflow-hidden gap-0 p-0">
-                        {/* Week Days Header */}
-                        <div className="grid grid-cols-7 border-b border-border">
-                            {weekDays.map((day, index) => (
-                                <div
-                                    key={index}
-                                    className="border-r border-border p-1.5 text-center text-xs font-semibold last:border-r-0"
-                                >
-                                    {day.substring(0, 1).toUpperCase()}
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
 
-                        {/* Calendar Grid */}
-                        <div className="grid grid-cols-7">
-                            {getCalendarDays.map((date, index) => {
-                                const today = isToday(date);
-                                const currentMonth = isCurrentMonth(date);
-                                const availableLinks = getAvailableLinks(date);
-                                const filteredLinks = availableLinks.filter(link =>
-                                    selectedLinkIds.includes(link.id)
-                                );
+                                {/* Calendar Grid */}
+                                <div className="grid grid-cols-7">
+                                    {getCalendarDays.map((date, index) => {
+                                        const today = isToday(date);
+                                        const currentMonth = isCurrentMonth(date);
+                                        const availableLinks = getAvailableLinks(date);
+                                        const filteredLinks = availableLinks.filter(link =>
+                                            selectedLinkIds.includes(link.id)
+                                        );
 
-                                return (
-                                    <div
-                                        key={index}
-                                        className={`min-h-[60px] border-b border-r border-border p-1 last:border-r-0 ${
-                                            !currentMonth ? 'bg-muted' : ''
-                                        }`}
-                                    >
-                                        {/* Date Number */}
-                                        <div
-                                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium mb-0.5 ${
-                                                today
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : currentMonth
-                                                      ? 'text-foreground'
-                                                      : 'text-muted-foreground'
-                                            }`}
-                                        >
-                                            {date.getDate()}
-                                        </div>
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`min-h-[120px] border-b border-r border-border p-2 last:border-r-0 ${!currentMonth ? 'bg-muted' : ''
+                                                    }`}
+                                            >
+                                                {/* Date Number */}
+                                                <div
+                                                    className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${today
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : currentMonth
+                                                            ? 'text-foreground'
+                                                            : 'text-muted-foreground'
+                                                        }`}
+                                                >
+                                                    {date.getDate()}
+                                                </div>
 
-                                        {/* Report Dots Indicator */}
-                                        {loadingReports && currentMonth ? (
-                                            <div className="w-full flex justify-center items-center mt-0.5">
-                                                <Skeleton className="h-1.5 w-1.5 rounded-full" />
-                                            </div>
-                                        ) : filteredLinks.length > 0 && (
-                                            <Popover onOpenChange={(open: boolean) => {
-                                                if (open) {
-                                                    // Load all links that haven't been loaded yet
-                                                    filteredLinks.forEach((link) => {
+                                                {/* Report Links */}
+                                                <div className="space-y-1 mt-1">
+                                                    {loadingReports && currentMonth ? (
+                                                        <Skeleton className="h-6 w-full rounded" />
+                                                    ) : filteredLinks.map((link) => {
                                                         const dateStr = date.toISOString().split('T')[0];
                                                         const key = `${dateStr}-${link.id}`;
                                                         const data = reportData[key];
                                                         const isLoading = loadingFiles[key];
-                                                        if (!data && !isLoading) {
-                                                            loadReportFolder(date, link.id);
-                                                        }
-                                                    });
-                                                }
-                                            }}>
-                                                <PopoverTrigger asChild>
-                                                    <button className="w-full flex flex-wrap gap-0.5 justify-center items-center mt-0.5">
-                                                        {filteredLinks.map((link) => (
-                                                            <div
-                                                                key={link.id}
-                                                                className={`h-1.5 w-1.5 rounded-full ${
-                                                                    link.is_public
-                                                                        ? 'bg-green-500'
-                                                                        : 'bg-blue-500'
-                                                                }`}
-                                                            ></div>
-                                                        ))}
-                                                    </button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-80" align="start">
-                                                    <div className="space-y-3">
-                                                        <div className="font-semibold text-sm mb-2">
-                                                            Laporan {date.toLocaleDateString('id-ID', {
-                                                                day: 'numeric',
-                                                                month: 'long',
-                                                                year: 'numeric',
-                                                            })}
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            {filteredLinks.map((link) => {
-                                                                const dateStr = date.toISOString().split('T')[0];
-                                                                const key = `${dateStr}-${link.id}`;
-                                                                const data = reportData[key];
-                                                                const isLoading = loadingFiles[key];
-                                                                const hasFolder = data && data.folder_link !== null;
+                                                        const hasFolder = data && data.folder_link !== null;
 
-                                                                return (
-                                                                    <div key={link.id} className="border-b border-border pb-2 last:border-b-0 last:pb-0">
-                                                                        <div className="font-medium text-sm mb-1.5">
+                                                        return (
+                                                            <Popover key={link.id} onOpenChange={(open: boolean) => {
+                                                                if (open && !data && !isLoading) {
+                                                                    loadReportFolder(date, link.id);
+                                                                }
+                                                            }}>
+                                                                <PopoverTrigger asChild>
+                                                                    <button
+                                                                        className={`w-full truncate rounded px-1.5 py-0.5 text-xs transition-colors cursor-pointer text-left ${link.is_public
+                                                                            ? 'bg-green-500/20 text-green-700 hover:bg-green-500/30'
+                                                                            : 'bg-blue-500/20 text-blue-700 hover:bg-blue-500/30'
+                                                                            }`}
+                                                                    >
+                                                                        {isLoading ? (
+                                                                            <span className="text-xs">Memuat...</span>
+                                                                        ) : (
+                                                                            <span className="font-medium">
+                                                                                {data?.title || link.title}
+                                                                            </span>
+                                                                        )}
+                                                                    </button>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-80" align="start">
+                                                                    <div className="space-y-3">
+                                                                        <div className="font-semibold text-sm">
                                                                             {data?.title || link.title}
                                                                         </div>
                                                                         {isLoading ? (
-                                                                            <div className="text-xs text-muted-foreground">Memuat...</div>
+                                                                            <div className="text-sm text-muted-foreground">Memuat...</div>
                                                                         ) : hasFolder ? (
                                                                             <a
                                                                                 href={data.folder_link!}
                                                                                 target="_blank"
                                                                                 rel="noopener noreferrer"
-                                                                                className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors p-1.5 rounded hover:bg-muted"
+                                                                                className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors p-2 rounded hover:bg-muted"
                                                                             >
-                                                                                <FileText className="h-3 w-3" />
+                                                                                <FileText className="h-4 w-4" />
                                                                                 <span className="flex-1">Buka Folder PDF</span>
-                                                                                <Download className="h-3 w-3" />
+                                                                                <Download className="h-4 w-4" />
                                                                             </a>
                                                                         ) : (
-                                                                            <div className="text-xs text-muted-foreground">
+                                                                            <div className="text-sm text-muted-foreground">
                                                                                 Tidak ada folder untuk tanggal ini
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                );
-                                                            })}
-                                                        </div>
+                                                                </PopoverContent>
+                                                            </Popover>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </Card>
+
+                            {/* Calendar Grid View - Mobile (Compact) */}
+                            <Card className="md:hidden overflow-hidden gap-0 p-0">
+                                {/* Week Days Header */}
+                                <div className="grid grid-cols-7 border-b border-border">
+                                    {weekDays.map((day, index) => (
+                                        <div
+                                            key={index}
+                                            className="border-r border-border p-1.5 text-center text-xs font-semibold last:border-r-0"
+                                        >
+                                            {day.substring(0, 1).toUpperCase()}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Calendar Grid */}
+                                <div className="grid grid-cols-7">
+                                    {getCalendarDays.map((date, index) => {
+                                        const today = isToday(date);
+                                        const currentMonth = isCurrentMonth(date);
+                                        const availableLinks = getAvailableLinks(date);
+                                        const filteredLinks = availableLinks.filter(link =>
+                                            selectedLinkIds.includes(link.id)
+                                        );
+
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`min-h-[60px] border-b border-r border-border p-1 last:border-r-0 ${!currentMonth ? 'bg-muted' : ''
+                                                    }`}
+                                            >
+                                                {/* Date Number */}
+                                                <div
+                                                    className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium mb-0.5 ${today
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : currentMonth
+                                                            ? 'text-foreground'
+                                                            : 'text-muted-foreground'
+                                                        }`}
+                                                >
+                                                    {date.getDate()}
+                                                </div>
+
+                                                {/* Report Dots Indicator */}
+                                                {loadingReports && currentMonth ? (
+                                                    <div className="w-full flex justify-center items-center mt-0.5">
+                                                        <Skeleton className="h-1.5 w-1.5 rounded-full" />
                                                     </div>
-                                                </PopoverContent>
-                                            </Popover>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </Card>
+                                                ) : filteredLinks.length > 0 && (
+                                                    <Popover onOpenChange={(open: boolean) => {
+                                                        if (open) {
+                                                            // Load all links that haven't been loaded yet
+                                                            filteredLinks.forEach((link) => {
+                                                                const dateStr = date.toISOString().split('T')[0];
+                                                                const key = `${dateStr}-${link.id}`;
+                                                                const data = reportData[key];
+                                                                const isLoading = loadingFiles[key];
+                                                                if (!data && !isLoading) {
+                                                                    loadReportFolder(date, link.id);
+                                                                }
+                                                            });
+                                                        }
+                                                    }}>
+                                                        <PopoverTrigger asChild>
+                                                            <button className="w-full flex flex-wrap gap-0.5 justify-center items-center mt-0.5">
+                                                                {filteredLinks.map((link) => (
+                                                                    <div
+                                                                        key={link.id}
+                                                                        className={`h-1.5 w-1.5 rounded-full ${link.is_public
+                                                                            ? 'bg-green-500'
+                                                                            : 'bg-blue-500'
+                                                                            }`}
+                                                                    ></div>
+                                                                ))}
+                                                            </button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-80" align="start">
+                                                            <div className="space-y-3">
+                                                                <div className="font-semibold text-sm mb-2">
+                                                                    Laporan {date.toLocaleDateString('id-ID', {
+                                                                        day: 'numeric',
+                                                                        month: 'long',
+                                                                        year: 'numeric',
+                                                                    })}
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    {filteredLinks.map((link) => {
+                                                                        const dateStr = date.toISOString().split('T')[0];
+                                                                        const key = `${dateStr}-${link.id}`;
+                                                                        const data = reportData[key];
+                                                                        const isLoading = loadingFiles[key];
+                                                                        const hasFolder = data && data.folder_link !== null;
+
+                                                                        return (
+                                                                            <div key={link.id} className="border-b border-border pb-2 last:border-b-0 last:pb-0">
+                                                                                <div className="font-medium text-sm mb-1.5">
+                                                                                    {data?.title || link.title}
+                                                                                </div>
+                                                                                {isLoading ? (
+                                                                                    <div className="text-xs text-muted-foreground">Memuat...</div>
+                                                                                ) : hasFolder ? (
+                                                                                    <a
+                                                                                        href={data.folder_link!}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors p-1.5 rounded hover:bg-muted"
+                                                                                    >
+                                                                                        <FileText className="h-3 w-3" />
+                                                                                        <span className="flex-1">Buka Folder PDF</span>
+                                                                                        <Download className="h-3 w-3" />
+                                                                                    </a>
+                                                                                ) : (
+                                                                                    <div className="text-xs text-muted-foreground">
+                                                                                        Tidak ada folder untuk tanggal ini
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </Card>
                         </div>
                     </div>
                 </div>

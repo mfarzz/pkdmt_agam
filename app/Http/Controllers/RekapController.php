@@ -17,11 +17,17 @@ class RekapController extends Controller
      */
     public function index(Request $request): Response
     {
-        // Get all report links
-        $reportLinks = ReportLink::orderBy('title')->get();
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+        
+        // Get report links for active disaster
+        $reportLinks = $activeDisaster 
+            ? ReportLink::where('disaster_id', $activeDisaster->id)->orderBy('title')->get() 
+            : collect([]);
 
         return Inertia::render('rekap', [
             'reportLinks' => $reportLinks,
+            'activeDisasterName' => $activeDisaster ? $activeDisaster->name : null,
         ]);
     }
 
@@ -43,8 +49,20 @@ class RekapController extends Controller
         $startDate = "$year-$month-01";
         $endDate = date('Y-m-t', strtotime($startDate)); // Last day of month
 
-        // Get report links based on access
-        $reportLinkIds = ReportLink::where(function ($query) use ($isAuthenticated) {
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+        if (!$activeDisaster) {
+            return response()->json([
+                'success' => true,
+                'year' => $year,
+                'month' => $month,
+                'reports' => [],
+            ]);
+        }
+
+        // Get report links based on access and active disaster
+        $reportLinkIds = ReportLink::where('disaster_id', $activeDisaster->id)
+            ->where(function ($query) use ($isAuthenticated) {
             $query->where('is_public', true);
             if ($isAuthenticated) {
                 $query->orWhere('is_public', false);
@@ -95,7 +113,11 @@ class RekapController extends Controller
     public function autoScanAll(Request $request): JsonResponse
     {
         try {
-            $links = ReportLink::all();
+            // Only scan active disaster links for public endpoint
+            $links = ReportLink::whereHas('disaster', function($q) {
+                $q->where('is_active', true);
+            })->get();
+            
             $scannedCount = 0;
             $errors = [];
             

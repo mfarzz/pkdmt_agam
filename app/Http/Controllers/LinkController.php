@@ -15,7 +15,8 @@ class LinkController extends Controller
      */
     public function index(Request $request): Response
     {
-        $links = SiteLink::orderBy('name')->get();
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        $links = SiteLink::where('disaster_id', $disasterId)->orderBy('name')->get();
 
         return Inertia::render('admin/kelola-link', [
             'links' => $links,
@@ -36,6 +37,7 @@ class LinkController extends Controller
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+        $validated['disaster_id'] = $request->session()->get('admin_active_disaster_id');
 
         SiteLink::create($validated);
 

@@ -5,17 +5,29 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    // Ambil link yang namanya mengandung "registrasi" (case-insensitive) dan aktif
-    $registrationLink = \App\Models\SiteLink::where('is_active', true)
-        ->whereRaw('LOWER(name) LIKE ?', ['%registrasi%'])
-        ->first();
+    // Get active disaster
+    $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+    
+    $registrationLink = null;
+    $excelFile = null;
 
-    // Ambil file Excel aktif untuk pengisian laporan
-    $excelFile = \App\Models\LaporanExcelFile::where('is_active', true)->first();
+    if ($activeDisaster) {
+        // Ambil link yang namanya mengandung "registrasi" (case-insensitive) dan aktif
+        $registrationLink = \App\Models\SiteLink::where('disaster_id', $activeDisaster->id)
+            ->where('is_active', true)
+            ->whereRaw('LOWER(name) LIKE ?', ['%registrasi%'])
+            ->first();
+
+        // Ambil file Excel aktif untuk pengisian laporan
+        $excelFile = \App\Models\LaporanExcelFile::where('disaster_id', $activeDisaster->id)
+            ->where('is_active', true)
+            ->first();
+    }
 
     return Inertia::render('bencana', [
         'registrationLink' => $registrationLink,
         'excelFile' => $excelFile,
+        'activeDisasterName' => $activeDisaster ? $activeDisaster->name : null,
     ]);
 })->name('home');
 
@@ -76,6 +88,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('kelola-laporan-excel', [App\Http\Controllers\LaporanExcelController::class, 'index'])->name('kelola-laporan-excel');
     Route::post('laporan-excel', [App\Http\Controllers\LaporanExcelController::class, 'store'])->name('laporan-excel.store');
     Route::delete('laporan-excel/{laporanExcelFile}', [App\Http\Controllers\LaporanExcelController::class, 'destroy'])->name('laporan-excel.destroy');
+
+    Route::get('kelola-bencana', [App\Http\Controllers\DisasterController::class, 'index'])->name('kelola-bencana');
+    Route::post('disasters', [App\Http\Controllers\DisasterController::class, 'store'])->name('disasters.store');
+    Route::put('disasters/{disaster}', [App\Http\Controllers\DisasterController::class, 'update'])->name('disasters.update');
+    Route::delete('disasters/{disaster}', [App\Http\Controllers\DisasterController::class, 'destroy'])->name('disasters.destroy');
+    Route::post('disasters/switch', [App\Http\Controllers\DisasterController::class, 'switch'])->name('disasters.switch');
 });
 
 // Public route for downloading excel file

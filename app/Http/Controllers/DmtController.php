@@ -19,8 +19,10 @@ class DmtController extends Controller
      */
     public function index(Request $request): Response
     {
-        $dmtLink = DmtLink::first();
-        $totalDmt = DmtData::count();
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        $dmtLink = DmtLink::where('disaster_id', $disasterId)->first();
+        
+        $totalDmt = $dmtLink ? DmtData::where('dmt_link_id', $dmtLink->id)->count() : 0;
 
         return Inertia::render('admin/kelola-dmt', [
             'dmtLink' => $dmtLink,
@@ -38,15 +40,26 @@ class DmtController extends Controller
         $perPage = $request->get('per_page', 10);
         $page = $request->get('page', 1);
         
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+        
+        $query = DmtData::whereRaw('1 = 0');
+        
+        if ($activeDisaster) {
+            $query = DmtData::whereHas('dmtLink', function($q) use ($activeDisaster) {
+                $q->where('disaster_id', $activeDisaster->id);
+            });
+        }
+        
         // Get statistics
-        $totalAktif = DmtData::where('status_penugasan', 'Aktif')->count();
-        $totalSelesai = DmtData::where('status_penugasan', '!=', 'Aktif')
+        $totalAktif = (clone $query)->where('status_penugasan', 'Aktif')->count();
+        $totalSelesai = (clone $query)->where('status_penugasan', '!=', 'Aktif')
             ->whereNotNull('status_penugasan')
             ->count();
-        $totalTim = DmtData::count();
+        $totalTim = (clone $query)->count();
         
         // Get paginated data ordered by id
-        $dmtData = DmtData::orderBy('id', 'asc')
+        $dmtData = $query->orderBy('id', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
 
         return Inertia::render('informasi', [
@@ -56,6 +69,7 @@ class DmtController extends Controller
                 'total_selesai' => $totalSelesai,
                 'total_tim' => $totalTim,
             ],
+            'activeDisasterName' => $activeDisaster ? $activeDisaster->name : null,
         ]);
     }
 
@@ -68,8 +82,10 @@ class DmtController extends Controller
             'gdrive_url' => ['required', 'url', 'max:500'],
         ]);
 
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+
         DmtLink::updateOrCreate(
-            ['id' => 1],
+            ['disaster_id' => $disasterId],
             ['gdrive_url' => $validated['gdrive_url']]
         );
 
@@ -87,7 +103,8 @@ class DmtController extends Controller
      */
     public function scan(Request $request): RedirectResponse
     {
-        $dmtLink = DmtLink::first();
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        $dmtLink = DmtLink::where('disaster_id', $disasterId)->first();
         
         if (!$dmtLink) {
             return redirect()->route('kelola-dmt')->with('error', 'Link Google Sheet belum diatur.');
@@ -108,7 +125,16 @@ class DmtController extends Controller
     public function autoScan(Request $request): JsonResponse
     {
         try {
-            $dmtLink = DmtLink::first();
+            // Get active disaster
+            $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+            if (!$activeDisaster) {
+                 return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada bencana aktif.',
+                ], 404);
+            }
+
+            $dmtLink = DmtLink::where('disaster_id', $activeDisaster->id)->first();
             
             if (!$dmtLink) {
                 return response()->json([
@@ -168,11 +194,21 @@ class DmtController extends Controller
         // Clear existing data
         DmtData::truncate();
 
+        $disasterId = request()->session()->get('admin_active_disaster_id');
+        // If triggered from public autoScan, use active disaster
+        if (!$disasterId) {
+             $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+             $disasterId = $activeDisaster ? $activeDisaster->id : null;
+        }
+
         // Get or create DMT link
-        $dmtLink = DmtLink::first();
+        $dmtLink = DmtLink::where('disaster_id', $disasterId)->first();
         if (!$dmtLink) {
             // Create link if doesn't exist
-            $dmtLink = DmtLink::create(['gdrive_url' => $sheetUrl]);
+            $dmtLink = DmtLink::create([
+                'gdrive_url' => $sheetUrl,
+                'disaster_id' => $disasterId
+            ]);
         }
 
         // Save new data

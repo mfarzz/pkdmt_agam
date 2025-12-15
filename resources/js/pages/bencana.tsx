@@ -1,8 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, UserPlus, BookOpen, Users, FileEdit, BarChart3 } from 'lucide-react';
-import AppNavbar from '@/components/app-navbar';
 import AppFooter from '@/components/app-footer';
+import AppNavbar from '@/components/app-navbar';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Head, Link } from '@inertiajs/react';
+import { BarChart3, BookOpen, FileEdit, FileText, UserPlus, Users } from 'lucide-react';
 
 interface BencanaProps {
     registrationLink?: {
@@ -22,6 +22,7 @@ interface BencanaProps {
         created_at: string;
         updated_at: string;
     };
+    activeDisasterName?: string;
 }
 
 const menuItems = (registrationLink?: BencanaProps['registrationLink'], excelFile?: BencanaProps['excelFile']) => [
@@ -64,7 +65,7 @@ const menuItems = (registrationLink?: BencanaProps['registrationLink'], excelFil
     },
 ];
 
-export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
+export default function Bencana({ registrationLink, excelFile, activeDisasterName }: BencanaProps) {
     const navItems = [
         {
             name: 'Beranda',
@@ -85,10 +86,10 @@ export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
                 <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 relative z-10 pt-24 flex-1">
                     <div className="mb-8 text-center">
                         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                             Pusat Komando Disaster Medical Team
+                            Pusat Komando Disaster Medical Team
                         </h1>
                         <p className="mt-2 text-lg text-muted-foreground">
-                            Kabupaten Agam
+                            {activeDisasterName || 'Kabupaten Agam'}
                         </p>
                     </div>
 
@@ -106,9 +107,8 @@ export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
                                 return (
                                     <div
                                         key={item.title}
-                                        className={`relative flex items-center animate-fade-in-up ${
-                                            isEven ? 'md:justify-start' : 'md:justify-end'
-                                        }`}
+                                        className={`relative flex items-center animate-fade-in-up ${isEven ? 'md:justify-start' : 'md:justify-end'
+                                            }`}
                                         style={{
                                             animationDelay: `${index * 150}ms`,
                                             animationFillMode: 'both',
@@ -117,11 +117,10 @@ export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
                                         {/* Garis horizontal untuk menghubungkan ke garis vertikal */}
                                         {!isLast && (
                                             <div
-                                                className={`hidden md:block absolute top-1/2 h-0.5 bg-primary/30 -translate-y-1/2 -z-10 ${
-                                                    isEven
-                                                        ? 'left-1/2 right-0'
-                                                        : 'left-0 right-1/2'
-                                                }`}
+                                                className={`hidden md:block absolute top-1/2 h-0.5 bg-primary/30 -translate-y-1/2 -z-10 ${isEven
+                                                    ? 'left-1/2 right-0'
+                                                    : 'left-0 right-1/2'
+                                                    }`}
                                             ></div>
                                         )}
 
@@ -131,9 +130,8 @@ export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
                                         </div>
 
                                         {item.href === '#' ? (
-                                            <div className={`w-full md:w-80 ${
-                                                isEven ? 'md:mr-auto' : 'md:ml-auto'
-                                            }`}>
+                                            <div className={`w-full md:w-80 ${isEven ? 'md:mr-auto' : 'md:ml-auto'
+                                                }`}>
                                                 <Card className="w-full opacity-60 cursor-not-allowed relative animate-fade-in-up" style={{ animationDelay: `${index * 150 + 100}ms`, animationFillMode: 'both' }}>
                                                     <CardHeader>
                                                         <div className="mb-2 flex items-center gap-3">
@@ -165,9 +163,8 @@ export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
                                                 href={item.href}
                                                 target={item.href.startsWith('http') ? '_blank' : undefined}
                                                 rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                                                className={`w-full md:w-80 ${
-                                                    isEven ? 'md:mr-auto' : 'md:ml-auto'
-                                                }`}
+                                                className={`w-full md:w-80 ${isEven ? 'md:mr-auto' : 'md:ml-auto'
+                                                    }`}
                                             >
                                                 <Card className="w-full transition-all hover:shadow-md hover:scale-[1.02] cursor-pointer relative animate-fade-in-up" style={{ animationDelay: `${index * 150 + 100}ms`, animationFillMode: 'both' }}>
                                                     <CardHeader>
@@ -198,9 +195,8 @@ export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
                                         ) : (
                                             <Link
                                                 href={item.href}
-                                                className={`w-full md:w-80 ${
-                                                    isEven ? 'md:mr-auto' : 'md:ml-auto'
-                                                }`}
+                                                className={`w-full md:w-80 ${isEven ? 'md:mr-auto' : 'md:ml-auto'
+                                                    }`}
                                             >
                                                 <Card className="w-full transition-all hover:shadow-md hover:scale-[1.02] cursor-pointer relative animate-fade-in-up" style={{ animationDelay: `${index * 150 + 100}ms`, animationFillMode: 'both' }}>
                                                     <CardHeader>

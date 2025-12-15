@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, FileText, Home, Link2, FileSpreadsheet, Image, Users, FileSpreadsheet as FileExcel } from 'lucide-react';
+import { AlertTriangle, FileSpreadsheet as FileExcel, FileSpreadsheet, FileText, Home, Image, LayoutGrid, Link2, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -19,6 +19,11 @@ const mainNavItems: NavItem[] = [
         title: 'Manajemen User',
         href: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Kelola Bencana',
+        href: '/kelola-bencana',
+        icon: AlertTriangle,
     },
     {
         title: 'Kelola DMT',

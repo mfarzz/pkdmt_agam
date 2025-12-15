@@ -9,7 +9,11 @@ class DmtLink extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['gdrive_url'];
+    protected $fillable = [
+        'gdrive_url',
+        'title',
+        'disaster_id',
+    ];
 
     /**
      * Get all DMT data for this link.

@@ -14,9 +14,15 @@ class SiteLink extends Model
         'url',
         'description',
         'is_active',
+        'disaster_id',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function disaster()
+    {
+        return $this->belongsTo(Disaster::class);
+    }
 }

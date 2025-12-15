@@ -12,12 +12,18 @@ class ReportLink extends Model
     protected $fillable = [
         'title',
         'is_public',
-        'gdrive_url',
+        'title',
+        'disaster_id',
     ];
 
     protected $casts = [
         'is_public' => 'boolean',
     ];
+
+    public function disaster()
+    {
+        return $this->belongsTo(Disaster::class);
+    }
 
     /**
      * Get the report dates for this link.
