@@ -39,6 +39,14 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
 
     const [currentDate, setCurrentDate] = useState(new Date());
 
+    // Helper function to format date as YYYY-MM-DD without timezone conversion
+    const formatDateLocal = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     // Get available report links based on access
     const availableLinks = useMemo(() => {
         return reportLinks.filter(link => {
@@ -133,7 +141,7 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
 
     // Load report folder link for a specific date and link
     const loadReportFolder = async (date: Date, linkId: number) => {
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = formatDateLocal(date);
         const key = `${dateStr}-${linkId}`;
 
         // Don't reload if already loaded
@@ -163,7 +171,7 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
 
     // Check if date has folder link for a specific link
     const hasFolderLink = (date: Date, linkId: number): boolean => {
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = formatDateLocal(date);
         const key = `${dateStr}-${linkId}`;
         const data = reportData[key];
         return data && data.folder_link !== null;
@@ -182,12 +190,20 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
         const autoScanAll = async () => {
             if (reportLinks.length > 0) {
                 try {
+                    // Get CSRF token from cookie
+                    const csrfToken = document.cookie
+                        .split('; ')
+                        .find(row => row.startsWith('XSRF-TOKEN='))
+                        ?.split('=')[1];
+
                     const response = await fetch('/rekap/auto-scan', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                            'Accept': 'application/json',
+                            'X-XSRF-TOKEN': csrfToken ? decodeURIComponent(csrfToken) : '',
                         },
+                        credentials: 'same-origin',
                     });
 
                     if (response.ok) {
@@ -498,7 +514,7 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
                                             {loadingReports && currentMonth ? (
                                                 <Skeleton className="h-6 w-full rounded" />
                                             ) : filteredLinks.map((link) => {
-                                                const dateStr = date.toISOString().split('T')[0];
+                                                const dateStr = formatDateLocal(date);
                                                 const key = `${dateStr}-${link.id}`;
                                                 const data = reportData[key];
                                                 const isLoading = loadingFiles[key];
@@ -616,7 +632,7 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
                                                 if (open) {
                                                     // Load all links that haven't been loaded yet
                                                     filteredLinks.forEach((link) => {
-                                                        const dateStr = date.toISOString().split('T')[0];
+                                                        const dateStr = formatDateLocal(date);
                                                         const key = `${dateStr}-${link.id}`;
                                                         const data = reportData[key];
                                                         const isLoading = loadingFiles[key];
@@ -651,7 +667,7 @@ export default function Rekap({ reportLinks = [] }: RekapProps) {
                                                         </div>
                                                         <div className="space-y-2">
                                                             {filteredLinks.map((link) => {
-                                                                const dateStr = date.toISOString().split('T')[0];
+                                                                const dateStr = formatDateLocal(date);
                                                                 const key = `${dateStr}-${link.id}`;
                                                                 const data = reportData[key];
                                                                 const isLoading = loadingFiles[key];

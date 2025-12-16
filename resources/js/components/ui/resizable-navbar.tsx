@@ -6,7 +6,7 @@ import {
     useScroll,
     useMotionValueEvent,
 } from 'motion/react';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 interface NavbarProps {
     children: React.ReactNode;
@@ -200,7 +200,6 @@ export const MobileNavMenu = ({
     children,
     className,
     isOpen,
-    onClose,
 }: MobileNavMenuProps) => {
     return (
         <AnimatePresence>
