@@ -12,7 +12,13 @@ class NotulensiLink extends Model
     protected $fillable = [
         'title',
         'gdrive_url',
+        'disaster_id',
     ];
+
+    public function disaster()
+    {
+        return $this->belongsTo(Disaster::class);
+    }
 
     /**
      * Get all notulensi dates for this link.

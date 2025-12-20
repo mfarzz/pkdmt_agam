@@ -1,9 +1,9 @@
-import { Head, Link } from '@inertiajs/react';
-import { useEffect } from 'react';
-import AppNavbar from '@/components/app-navbar';
 import AppFooter from '@/components/app-footer';
+import AppNavbar from '@/components/app-navbar';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ExternalLink, Download, ArrowLeft } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Download, ExternalLink } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface InfografisItem {
     id: number;
@@ -28,9 +28,10 @@ interface InfografisProps {
             active: boolean;
         }>;
     };
+    activeDisasterName?: string;
 }
 
-export default function Infografis({ infografis }: InfografisProps) {
+export default function Infografis({ infografis, activeDisasterName }: InfografisProps) {
     const infografisData = infografis?.data || [];
     const paginationLinks = infografis?.links || [];
 
@@ -116,7 +117,7 @@ export default function Infografis({ infografis }: InfografisProps) {
                                         Informasi Umum
                                     </h1>
                                     <p className="text-xs text-muted-foreground">
-                                        Infografis dan informasi penting
+                                        {activeDisasterName ? `Infografis ${activeDisasterName}` : 'Infografis dan informasi penting'}
                                     </p>
                                 </div>
                             </div>
@@ -142,7 +143,7 @@ export default function Infografis({ infografis }: InfografisProps) {
                                     Informasi Umum
                                 </h1>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    Infografis dan informasi penting tentang Kabupaten Agam
+                                    {activeDisasterName ? `Infografis dan informasi penting tentang ${activeDisasterName}` : 'Infografis dan informasi penting tentang Kabupaten Agam'}
                                 </p>
                             </div>
 
@@ -158,62 +159,74 @@ export default function Infografis({ infografis }: InfografisProps) {
                     ) : (
                         <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {infografisData.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="group"
-                                >
-                                    <a
-                                        href={`/infografis/${item.id}/preview`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="cursor-pointer block"
+                                {infografisData.map((item) => {
+                                    const isPdf = item.mime_type === 'application/pdf';
+                                    return (
+                                    <div
+                                        key={item.id}
+                                        className="group"
                                     >
-                                        <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] bg-card">
-                                            <div className="aspect-video bg-muted relative overflow-hidden">
-                                                <img
-                                                    src={`/infografis/${item.id}/image`}
-                                                    alt={item.file_name}
-                                                    className="w-full h-full object-contain transition-transform group-hover:scale-105"
-                                                    loading="lazy"
-                                                    crossOrigin="anonymous"
-                                                    referrerPolicy="no-referrer"
-                                                    onError={(e) => {
-                                                        // Fallback: try using file_url if proxy fails
-                                                        const target = e.target as HTMLImageElement;
-                                                        if (target.src !== item.file_url) {
-                                                            target.src = item.file_url;
-                                                        }
-                                                    }}
-                                                />
-                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                                    <div className="bg-black/50 rounded-full p-2">
-                                                        <ExternalLink className="h-4 w-4 text-white" />
+                                        <a
+                                            href={`/infografis/${item.id}/preview`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="cursor-pointer block"
+                                        >
+                                            <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] bg-card">
+                                                <div className="aspect-video bg-muted relative overflow-hidden">
+                                                        {isPdf ? (
+                                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
+                                                                <div className="text-center p-4">
+                                                                    <svg className="w-16 h-16 mx-auto text-red-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                    <p className="text-xs text-muted-foreground font-medium">PDF</p>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                    <img
+                                                        src={`/infografis/${item.id}/image`}
+                                                        alt={item.file_name}
+                                                        className="w-full h-full object-contain transition-transform group-hover:scale-105"
+                                                        loading="lazy"
+                                                        crossOrigin="anonymous"
+                                                        referrerPolicy="no-referrer"
+                                                        onError={(e) => {
+                                                                    // Hide image if proxy fails to avoid CORS issues
+                                                            const target = e.target as HTMLImageElement;
+                                                                    target.style.display = 'none';
+                                                        }}
+                                                    />
+                                                        )}
+                                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                                        <div className="bg-black/50 rounded-full p-2">
+                                                            <ExternalLink className="h-4 w-4 text-white" />
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <div className="p-4">
+                                                    <p className="text-sm font-medium line-clamp-2 flex items-center gap-1" title={item.file_name}>
+                                                        {item.file_name}
+                                                        <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div className="p-4">
-                                                <p className="text-sm font-medium line-clamp-2 flex items-center gap-1" title={item.file_name}>
-                                                    {item.file_name}
-                                                    <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <div className="mt-2 flex justify-end">
-                                        <a
-                                            href={`/infografis/${item.id}/download`}
-                                            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                            }}
-                                        >
-                                            <Download className="h-3 w-3" />
-                                            Download
                                         </a>
+                                        <div className="mt-2 flex justify-end">
+                                            <a
+                                                href={`/infografis/${item.id}/download`}
+                                                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                }}
+                                            >
+                                                <Download className="h-3 w-3" />
+                                                Download
+                                            </a>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Pagination */}
@@ -248,11 +261,10 @@ export default function Infografis({ infografis }: InfografisProps) {
                                                 <Link
                                                     key={link.url}
                                                     href={link.url}
-                                                    className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                                                        link.active
-                                                            ? 'border-primary bg-primary text-primary-foreground'
-                                                            : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
-                                                    }`}
+                                                    className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${link.active
+                                                        ? 'border-primary bg-primary text-primary-foreground'
+                                                        : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                                                        }`}
                                                 >
                                                     {link.label}
                                                 </Link>

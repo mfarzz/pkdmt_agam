@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Link, router } from '@inertiajs/react';
 import { LogOut, User } from 'lucide-react';
 import { useInitials } from '@/hooks/use-initials';
+import { cn } from '@/lib/utils';
 
 interface NavItem {
     name: string;
@@ -148,16 +149,23 @@ export default function AppNavbar({
                     isOpen={isMobileMenuOpen}
                     onClose={handleMobileMenuClose}
                 >
-                    {navItems.map((item, idx) => (
+                    {navItems.map((item, idx) => {
+                        const currentPath = typeof window !== 'undefined' ? window.location.pathname : page.url.split('?')[0];
+                        const isActive = currentPath === item.link || (item.link !== '/' && currentPath.startsWith(item.link));
+                        return (
                         <a
                             key={`mobile-link-${idx}`}
                             href={item.link}
                             onClick={handleMobileMenuClose}
-                            className="relative text-neutral-600"
+                                className={cn(
+                                    "relative block px-2 py-2 rounded-md transition-colors",
+                                    isActive ? "text-primary font-semibold bg-primary/10" : "text-neutral-600"
+                                )}
                         >
-                            <span className="block">{item.name}</span>
+                                <span>{item.name}</span>
                         </a>
-                    ))}
+                        );
+                    })}
                     <div className="flex w-full flex-col gap-4">
                         {isAuthenticated ? (
                             <>

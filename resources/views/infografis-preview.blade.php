@@ -10,24 +10,26 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             background-color: #1a1a1a;
-            padding: 20px;
+            padding: 0;
+            margin: 0;
         }
-        
+
         .image-container {
-            max-width: 100%;
-            max-height: 100vh;
+            width: 100%;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
         }
-        
+
         .image-container img {
             max-width: 100%;
             max-height: 100vh;
@@ -36,14 +38,22 @@
             object-fit: contain;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
-        
+
+        .image-container iframe {
+            width: 100%;
+            height: 100vh;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: block;
+        }
+
         .error-message {
             color: white;
             text-align: center;
             padding: 20px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
-        
+
         .file-name {
             position: fixed;
             bottom: 20px;
@@ -59,7 +69,7 @@
             align-items: center;
             gap: 12px;
         }
-        
+
         .download-btn {
             background-color: rgba(59, 130, 246, 0.9);
             color: white;
@@ -75,11 +85,11 @@
             gap: 6px;
             transition: background-color 0.2s;
         }
-        
+
         .download-btn:hover {
             background-color: rgba(59, 130, 246, 1);
         }
-        
+
         .download-btn:active {
             transform: scale(0.95);
         }
@@ -87,29 +97,39 @@
 </head>
 <body>
     <div class="image-container">
-        <img 
-            id="preview-image"
-            src="{{ $imageUrl }}" 
-            alt="{{ $fileName }}"
-            style="display: block;"
-        />
-        <div class="error-message" id="error-message" style="display: none;">
-            <p>Gagal memuat gambar.</p>
-            <p><a href="https://drive.google.com/file/d/{{ $fileId }}/view" target="_blank" style="color: #60a5fa;">Buka gambar di Google Drive</a></p>
-        </div>
+        @if($isPdf)
+            <iframe
+                id="preview-iframe"
+                src="{{ $previewUrl }}"
+                title="{{ $fileName }}"
+                style="display: block;"
+            ></iframe>
+        @else
+            <img
+                id="preview-image"
+                src="{{ $previewUrl }}"
+                alt="{{ $fileName }}"
+                style="display: block;"
+            />
+            <div class="error-message" id="error-message" style="display: none;">
+                <p>Gagal memuat gambar.</p>
+                <p><a href="https://drive.google.com/file/d/{{ $fileId }}/view" target="_blank" style="color: #60a5fa;">Buka gambar di Google Drive</a></p>
+            </div>
+            <script>
+                const img = document.getElementById('preview-image');
+                const errorMsg = document.getElementById('error-message');
+
+                if (img) {
+                    img.onerror = function() {
+                        img.style.display = 'none';
+                        if (errorMsg) {
+                            errorMsg.style.display = 'block';
+                        }
+                    };
+                }
+            </script>
+        @endif
     </div>
-    
-    <script>
-        const img = document.getElementById('preview-image');
-        const errorMsg = document.getElementById('error-message');
-        
-        img.onerror = function() {
-            img.style.display = 'none';
-            if (errorMsg) {
-                errorMsg.style.display = 'block';
-            }
-        };
-    </script>
     <div class="file-name">
         <span>{{ $fileName }}</span>
         <a href="/infografis/{{ $id }}/download" class="download-btn" download>

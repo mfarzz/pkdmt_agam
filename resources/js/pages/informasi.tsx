@@ -1,18 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
-import { useEffect } from 'react';
-import AppNavbar from '@/components/app-navbar';
 import AppFooter from '@/components/app-footer';
+import AppNavbar from '@/components/app-navbar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Phone, Mail, Eye, Users, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Dialog,
     DialogContent,
@@ -21,8 +11,27 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Head, Link, router } from '@inertiajs/react';
+import { CheckCircle, ChevronLeft, ChevronRight, Eye, Mail, Phone, Search, Users, XCircle, X, Activity, Stethoscope, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { usePage } from '@inertiajs/react';
 
 interface DmtData {
     id: number;
@@ -81,6 +90,28 @@ interface InformasiProps {
         total_selesai: number;
         total_tim: number;
     };
+    aggregateData?: {
+        kapasitas: {
+            rawat_jalan: number;
+            rawat_inap: number;
+            operasi_mayor: number;
+            operasi_minor: number;
+        };
+        tenaga_medis: {
+            dokter_umum: number;
+            perawat: number;
+            bidan: number;
+            apoteker: number;
+            psikolog: number;
+            staf_logistik: number;
+            staf_administrasi: number;
+            petugas_keamanan: number;
+        };
+    };
+    jenisLayananData?: Array<{ name: string; count: number }>;
+    activeDisasterName?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
 }
 
 function formatDate(dateString: string | null): string {
@@ -94,6 +125,31 @@ function formatDate(dateString: string | null): string {
         });
     } catch {
         return dateString;
+    }
+}
+
+// Helper function to get badge variant/color based on status
+function getStatusBadgeStyle(status: string | null): { variant: 'default' | 'secondary' | 'outline' | 'destructive'; className?: string } {
+    if (!status) {
+        return { variant: 'secondary' };
+    }
+
+    const statusLower = status.toLowerCase().trim();
+    
+    // Map status to different colors
+    if (statusLower === 'aktif') {
+        return { variant: 'default', className: 'bg-green-500 hover:bg-green-600 text-white' };
+    } else if (statusLower === 'selesai' || statusLower.includes('selesai')) {
+        return { variant: 'secondary', className: 'bg-gray-500 hover:bg-gray-600 text-white' };
+    } else if (statusLower === 'belum datang' || statusLower.includes('belum') || statusLower.includes('pending')) {
+        return { variant: 'outline', className: 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border-yellow-300 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800' };
+    } else if (statusLower === 'dibatalkan' || statusLower.includes('batal')) {
+        return { variant: 'destructive', className: 'bg-red-500 hover:bg-red-600 text-white' };
+    } else if (statusLower === 'dijadwalkan' || statusLower.includes('jadwal')) {
+        return { variant: 'outline', className: 'bg-blue-100 hover:bg-blue-200 text-blue-800 border-blue-300 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800' };
+    } else {
+        // Default untuk status lainnya
+        return { variant: 'secondary', className: 'bg-slate-500 hover:bg-slate-600 text-white' };
     }
 }
 
@@ -130,8 +186,8 @@ function DetailDialog({ dmt }: { dmt: DmtData }) {
                                 <div>
                                     <span className="text-muted-foreground">Status:</span>
                                     <Badge
-                                        variant={dmt.status_penugasan.toLowerCase() === 'aktif' ? 'default' : 'secondary'}
-                                        className="ml-2"
+                                        variant={getStatusBadgeStyle(dmt.status_penugasan).variant}
+                                        className={`ml-2 ${getStatusBadgeStyle(dmt.status_penugasan).className || ''}`}
                                     >
                                         {dmt.status_penugasan}
                                     </Badge>
@@ -221,42 +277,42 @@ function DetailDialog({ dmt }: { dmt: DmtData }) {
                         dmt.kapasitas_rawat_inap !== null ||
                         dmt.kapasitas_operasi_bedah_mayor !== null ||
                         dmt.kapasitas_operasi_bedah_minor !== null) && (
-                        <div>
-                            <h3 className="font-semibold text-lg mb-3">Kapasitas Layanan</h3>
-                            <div className="grid grid-cols-4 gap-4 text-sm">
-                                {dmt.kapasitas_rawat_jalan !== null && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-xl font-bold">{dmt.kapasitas_rawat_jalan}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Rawat Jalan/hari</div>
-                                    </div>
-                                )}
-                                {dmt.kapasitas_rawat_inap !== null && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-xl font-bold">{dmt.kapasitas_rawat_inap}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Rawat Inap/hari</div>
-                                    </div>
-                                )}
-                                {dmt.kapasitas_operasi_bedah_mayor !== null && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-xl font-bold">{dmt.kapasitas_operasi_bedah_mayor}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Bedah Mayor/hari</div>
-                                    </div>
-                                )}
-                                {dmt.kapasitas_operasi_bedah_minor !== null && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-xl font-bold">{dmt.kapasitas_operasi_bedah_minor}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Bedah Minor/hari</div>
+                            <div>
+                                <h3 className="font-semibold text-lg mb-3">Kapasitas Layanan</h3>
+                                <div className="grid grid-cols-4 gap-4 text-sm">
+                                    {dmt.kapasitas_rawat_jalan !== null && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-xl font-bold">{dmt.kapasitas_rawat_jalan}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Rawat Jalan/hari</div>
+                                        </div>
+                                    )}
+                                    {dmt.kapasitas_rawat_inap !== null && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-xl font-bold">{dmt.kapasitas_rawat_inap}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Rawat Inap/hari</div>
+                                        </div>
+                                    )}
+                                    {dmt.kapasitas_operasi_bedah_mayor !== null && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-xl font-bold">{dmt.kapasitas_operasi_bedah_mayor}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Bedah Mayor/hari</div>
+                                        </div>
+                                    )}
+                                    {dmt.kapasitas_operasi_bedah_minor !== null && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-xl font-bold">{dmt.kapasitas_operasi_bedah_minor}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Bedah Minor/hari</div>
+                                        </div>
+                                    )}
+                                </div>
+                                {dmt.jenis_layanan_tersedia && (
+                                    <div className="mt-4 text-sm">
+                                        <span className="text-muted-foreground">Jenis Layanan: </span>
+                                        <span className="font-medium">{dmt.jenis_layanan_tersedia}</span>
                                     </div>
                                 )}
                             </div>
-                            {dmt.jenis_layanan_tersedia && (
-                                <div className="mt-4 text-sm">
-                                    <span className="text-muted-foreground">Jenis Layanan: </span>
-                                    <span className="font-medium">{dmt.jenis_layanan_tersedia}</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        )}
 
                     {/* Tenaga Medis */}
                     {(dmt.jumlah_dokter_umum !== null ||
@@ -265,73 +321,76 @@ function DetailDialog({ dmt }: { dmt: DmtData }) {
                         dmt.jumlah_bidan !== null ||
                         dmt.jumlah_apoteker !== null ||
                         dmt.jumlah_psikolog !== null) && (
-                        <div>
-                            <h3 className="font-semibold text-lg mb-3">Tenaga Medis</h3>
-                            <div className="grid grid-cols-4 gap-4 text-sm">
-                                {dmt.jumlah_dokter_umum !== null && dmt.jumlah_dokter_umum > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_dokter_umum}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Dokter Umum</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_perawat !== null && dmt.jumlah_perawat > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_perawat}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Perawat</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_bidan !== null && dmt.jumlah_bidan > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_bidan}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Bidan</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_apoteker !== null && dmt.jumlah_apoteker > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_apoteker}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Apoteker</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_psikolog !== null && dmt.jumlah_psikolog > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_psikolog}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Psikolog</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_staf_logistik !== null && dmt.jumlah_staf_logistik > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_staf_logistik}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Staf Logistik</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_staf_administrasi !== null && dmt.jumlah_staf_administrasi > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_staf_administrasi}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Staf Administrasi</div>
-                                    </div>
-                                )}
-                                {dmt.jumlah_petugas_keamanan !== null && dmt.jumlah_petugas_keamanan > 0 && (
-                                    <div className="text-center p-3 bg-muted rounded-lg">
-                                        <div className="text-lg font-bold">{dmt.jumlah_petugas_keamanan}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Petugas Keamanan</div>
+                            <div>
+                                <h3 className="font-semibold text-lg mb-3">Tenaga Medis</h3>
+                                <div className="grid grid-cols-4 gap-4 text-sm">
+                                    {dmt.jumlah_dokter_umum !== null && dmt.jumlah_dokter_umum > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_dokter_umum}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Dokter Umum</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_perawat !== null && dmt.jumlah_perawat > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_perawat}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Perawat</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_bidan !== null && dmt.jumlah_bidan > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_bidan}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Bidan</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_apoteker !== null && dmt.jumlah_apoteker > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_apoteker}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Apoteker</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_psikolog !== null && dmt.jumlah_psikolog > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_psikolog}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Psikolog</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_staf_logistik !== null && dmt.jumlah_staf_logistik > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_staf_logistik}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Staf Logistik</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_staf_administrasi !== null && dmt.jumlah_staf_administrasi > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_staf_administrasi}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Staf Administrasi</div>
+                                        </div>
+                                    )}
+                                    {dmt.jumlah_petugas_keamanan !== null && dmt.jumlah_petugas_keamanan > 0 && (
+                                        <div className="text-center p-3 bg-muted rounded-lg">
+                                            <div className="text-lg font-bold">{dmt.jumlah_petugas_keamanan}</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Petugas Keamanan</div>
+                                        </div>
+                                    )}
+                                </div>
+                                {dmt.rincian_dokter_spesialis && (
+                                    <div className="mt-4 text-sm">
+                                        <span className="text-muted-foreground">Dokter Spesialis: </span>
+                                        <span className="font-medium">{dmt.rincian_dokter_spesialis}</span>
                                     </div>
                                 )}
                             </div>
-                            {dmt.rincian_dokter_spesialis && (
-                                <div className="mt-4 text-sm">
-                                    <span className="text-muted-foreground">Dokter Spesialis: </span>
-                                    <span className="font-medium">{dmt.rincian_dokter_spesialis}</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        )}
                 </div>
             </DialogContent>
         </Dialog>
     );
 }
 
-export default function Informasi({ dmtData, statistics }: InformasiProps) {
+export default function Informasi({ dmtData, statistics, aggregateData, jenisLayananData = [], activeDisasterName, sortBy: initialSortBy = 'tanggal_kedatangan', sortOrder: initialSortOrder = 'desc' }: InformasiProps) {
+    const { url } = usePage();
+    const urlParams = new URLSearchParams(url.split('?')[1] || '');
+
     const navItems = [
         {
             name: 'Beranda',
@@ -343,43 +402,157 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
         },
     ];
 
-    const dmtDataList = dmtData?.data || [];
+    const allDmtData = useMemo(() => {
+        if (!dmtData) return [];
+        // Handle both paginator object and direct array
+        if (Array.isArray(dmtData)) {
+            return dmtData;
+        }
+        return dmtData?.data || [];
+    }, [dmtData]);
     const paginationLinks = dmtData?.links || [];
 
-    // Auto-scan DMT sheet on page load - using same logic as scan button
-    useEffect(() => {
-        // Check if already scanned in this session
-        const scanKey = 'dmt_auto_scanned';
-        if (sessionStorage.getItem(scanKey)) {
+    // Initialize filter states from URL params (ignore page param)
+    const [searchQuery, setSearchQuery] = useState(() => {
+        const params = new URLSearchParams(url.split('?')[1] || '');
+        return params.get('search') || '';
+    });
+    const [statusFilter, setStatusFilter] = useState<string>(() => {
+        const params = new URLSearchParams(url.split('?')[1] || '');
+        return params.get('status') || 'all';
+    });
+    const [sortBy, setSortBy] = useState(() => {
+        const params = new URLSearchParams(url.split('?')[1] || '');
+        return params.get('sort_by') || initialSortBy;
+    });
+    const [sortOrder, setSortOrder] = useState(() => {
+        const params = new URLSearchParams(url.split('?')[1] || '');
+        return params.get('sort_order') || initialSortOrder;
+    });
+
+    // Track if component just mounted to avoid request on initial load
+    const isInitialMount = useRef(true);
+
+    // Update URL when filters change
+    const updateFilters = (search: string, status: string, sortBy: string, sortOrder: string, resetPage: boolean = true) => {
+        // Skip on initial mount
+        if (isInitialMount.current) {
             return;
         }
 
-        const autoScan = async () => {
-            try {
-                const response = await fetch('/informasi/auto-scan', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    },
-                });
+        // Start with current URL params to preserve page and other params
+        const currentParams = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams();
+        
+        // Preserve page parameter if not resetting
+        if (!resetPage && currentParams.has('page')) {
+            params.set('page', currentParams.get('page')!);
+        }
+        
+        // Set filter parameters
+        if (search.trim()) {
+            params.set('search', search.trim());
+        }
+        
+        if (status && status !== 'all') {
+            params.set('status', status);
+        }
+        
+        if (sortBy && sortBy !== 'tanggal_kedatangan') {
+            params.set('sort_by', sortBy);
+        }
+        
+        if (sortOrder && sortOrder !== 'desc') {
+            params.set('sort_order', sortOrder);
+        }
 
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        console.log('Auto-scan completed:', result.message);
-                        sessionStorage.setItem(scanKey, 'true');
-                        // Reload page to show updated data
-                        window.location.reload();
-                    }
-                }
-            } catch (error) {
-                console.error('Error auto-scanning DMT:', error);
-            }
-        };
+        const queryString = params.toString();
+        const newUrl = queryString ? `/informasi?${queryString}` : '/informasi';
 
-        autoScan();
-    }, []);
+        // Get current URL without hash
+        const currentPath = window.location.pathname;
+        const currentSearch = window.location.search;
+        const currentUrl = currentPath + currentSearch;
+        
+        // Only navigate if filter parameters actually changed (ignore page param)
+        const currentParamsWithoutPage = new URLSearchParams(currentSearch);
+        const newParamsWithoutPage = new URLSearchParams(queryString);
+        currentParamsWithoutPage.delete('page');
+        newParamsWithoutPage.delete('page');
+        
+        // Compare filter params only (not page)
+        const currentFilterString = currentParamsWithoutPage.toString();
+        const newFilterString = newParamsWithoutPage.toString();
+        
+        // Only navigate if filter params changed
+        if (currentFilterString !== newFilterString) {
+            router.get(newUrl, {}, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            });
+        }
+    };
+
+    // Track previous filter values to detect actual changes
+    const prevFiltersRef = useRef({ search: searchQuery, status: statusFilter, sortBy, sortOrder });
+
+    // Debounce search query updates and handle status/sort changes
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            prevFiltersRef.current = { search: searchQuery, status: statusFilter, sortBy, sortOrder };
+            return;
+        }
+
+        // Only update if filters actually changed (not just on re-render from pagination)
+        const filtersChanged = 
+            prevFiltersRef.current.search !== searchQuery || 
+            prevFiltersRef.current.status !== statusFilter ||
+            prevFiltersRef.current.sortBy !== sortBy ||
+            prevFiltersRef.current.sortOrder !== sortOrder;
+
+        if (!filtersChanged) {
+            return;
+        }
+
+        prevFiltersRef.current = { search: searchQuery, status: statusFilter, sortBy, sortOrder };
+
+        // Debounce search, but update status/sort immediately
+        if (prevFiltersRef.current.search !== searchQuery) {
+            const timeoutId = setTimeout(() => {
+                updateFilters(searchQuery, statusFilter, sortBy, sortOrder, true);
+            }, 500);
+            return () => clearTimeout(timeoutId);
+        } else {
+            // Update immediately for status, sortBy, or sortOrder changes
+            updateFilters(searchQuery, statusFilter, sortBy, sortOrder, true);
+        }
+    }, [searchQuery, statusFilter, sortBy, sortOrder]);
+    
+    const handleSort = (column: string) => {
+        if (sortBy === column) {
+            // Toggle sort order
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            // Set new column and default to desc
+            setSortBy(column);
+            setSortOrder('desc');
+        }
+    };
+    
+    const getSortIcon = (column: string) => {
+        if (sortBy !== column) {
+            return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
+        }
+        return sortOrder === 'asc' 
+            ? <ArrowUp className="h-4 w-4 ml-1" />
+            : <ArrowDown className="h-4 w-4 ml-1" />;
+    };
+
+    // Data is already filtered by backend, no need for client-side filtering
+    // Ensure dmtDataList is always an array
+    const dmtDataList = Array.isArray(allDmtData) ? allDmtData : [];
 
     return (
         <>
@@ -393,7 +566,7 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                             Informasi Disaster Medical Team (DMT)
                         </h1>
                         <p className="mt-2 text-lg text-muted-foreground">
-                            Data tim medis yang bertugas di Kabupaten Agam
+                            {activeDisasterName ? `Data tim medis yang bertugas di ${activeDisasterName}` : 'Data tim medis yang bertugas di Kabupaten Agam'}
                         </p>
                     </div>
 
@@ -445,9 +618,201 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                         </div>
                     )}
 
-                    {dmtDataList.length === 0 ? (
+                    {/* Visualization Section */}
+                    {aggregateData && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                            {/* Kapasitas Layanan Chart */}
+                            <Card>
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <Activity className="h-5 w-5 text-primary" />
+                                        <CardTitle>Kapasitas Layanan</CardTitle>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        Total kapasitas layanan dari tim DMT aktif
+                                    </p>
+                                </CardHeader>
+                                <CardContent>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <BarChart
+                                            data={[
+                                                {
+                                                    name: 'Rawat Jalan',
+                                                    value: aggregateData.kapasitas.rawat_jalan,
+                                                    unit: 'pasien/hari',
+                                                },
+                                                {
+                                                    name: 'Rawat Inap',
+                                                    value: aggregateData.kapasitas.rawat_inap,
+                                                    unit: 'pasien/hari',
+                                                },
+                                                {
+                                                    name: 'Operasi Mayor',
+                                                    value: aggregateData.kapasitas.operasi_mayor,
+                                                    unit: 'kasus/hari',
+                                                },
+                                                {
+                                                    name: 'Operasi Minor',
+                                                    value: aggregateData.kapasitas.operasi_minor,
+                                                    unit: 'kasus/hari',
+                                                },
+                                            ]}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                                            <YAxis />
+                                            <Tooltip
+                                                formatter={(value: number, name: string, props: any) => [
+                                                    `${value} ${props.payload.unit}`,
+                                                    props.payload.name,
+                                                ]}
+                                            />
+                                            <Bar dataKey="value" fill="#06b6d4" radius={[8, 8, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+
+                            {/* Tenaga Medis Chart */}
+                            <Card>
+                                <CardHeader>
+                                    <div className="flex items-center gap-2">
+                                        <Stethoscope className="h-5 w-5 text-primary" />
+                                        <CardTitle>Tenaga Medis & Staf</CardTitle>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        Total tenaga medis dan staf dari semua tim DMT
+                                    </p>
+                                </CardHeader>
+                                <CardContent>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <BarChart
+                                            data={[
+                                                { name: 'Dokter Umum', value: aggregateData.tenaga_medis.dokter_umum },
+                                                { name: 'Perawat', value: aggregateData.tenaga_medis.perawat },
+                                                { name: 'Bidan', value: aggregateData.tenaga_medis.bidan },
+                                                { name: 'Apoteker', value: aggregateData.tenaga_medis.apoteker },
+                                                { name: 'Psikolog', value: aggregateData.tenaga_medis.psikolog },
+                                                { name: 'Staf Logistik', value: aggregateData.tenaga_medis.staf_logistik },
+                                                { name: 'Staf Admin', value: aggregateData.tenaga_medis.staf_administrasi },
+                                                { name: 'Petugas Keamanan', value: aggregateData.tenaga_medis.petugas_keamanan },
+                                            ]}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                                            <YAxis />
+                                            <Tooltip formatter={(value: number) => [`${value} orang`, 'Jumlah']} />
+                                            <Bar dataKey="value" fill="#22c55e" radius={[8, 8, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+
+                    {/* Jenis Layanan Tersedia Chart */}
+                    {jenisLayananData && jenisLayananData.length > 0 && (
+                        <Card className="mb-8">
+                            <CardHeader>
+                                <div className="flex items-center gap-2">
+                                    <Activity className="h-5 w-5 text-primary" />
+                                    <CardTitle>Jenis Layanan yang Tersedia</CardTitle>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Frekuensi jenis layanan yang tersedia dari tim DMT aktif
+                                </p>
+                            </CardHeader>
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <BarChart
+                                        data={jenisLayananData}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis 
+                                            dataKey="name" 
+                                            angle={-45} 
+                                            textAnchor="end" 
+                                            height={100}
+                                            interval={0}
+                                        />
+                                        <YAxis />
+                                        <Tooltip 
+                                            formatter={(value: number) => [`${value} tim`, 'Jumlah Tim']} 
+                                        />
+                                        <Bar dataKey="count" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Filter Section */}
+                    <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                        <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full sm:w-auto">
+                            {/* Search Input */}
+                            <div className="relative flex-1 sm:flex-initial sm:w-64">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Cari nama DMT, ketua tim, kontak..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Status Filter */}
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger className="w-full sm:w-[180px]">
+                                    <SelectValue placeholder="Filter Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua Status</SelectItem>
+                                    <SelectItem value="Aktif">Aktif</SelectItem>
+                                    <SelectItem value="Belum Datang">Belum Datang</SelectItem>
+                                    <SelectItem value="Selesai">Selesai</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Results Count */}
+                        <div className="text-sm text-muted-foreground">
+                            {dmtData?.total || 0} tim ditemukan
+                        </div>
+                    </div>
+
+                    {(!dmtData || dmtDataList.length === 0) ? (
                         <div className="text-center py-12">
-                            <p className="text-muted-foreground">Belum ada data DMT tersedia.</p>
+                            <p className="text-muted-foreground">
+                                {searchQuery || statusFilter !== 'all'
+                                    ? 'Tidak ada data yang sesuai dengan filter.'
+                                    : 'Belum ada data DMT tersedia.'}
+                            </p>
+                            {(searchQuery || statusFilter !== 'all') && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setSearchQuery('');
+                                        setStatusFilter('all');
+                                        setSortBy('tanggal_kedatangan');
+                                        setSortOrder('desc');
+                                        updateFilters('', 'all', 'tanggal_kedatangan', 'desc');
+                                    }}
+                                    className="mt-4"
+                                >
+                                    Reset Filter
+                                </Button>
+                            )}
                         </div>
                     ) : (
                         <>
@@ -456,12 +821,60 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead className="w-[50px]">ID</TableHead>
-                                            <TableHead className="w-[200px]">Nama DMT</TableHead>
-                                            <TableHead>Ketua Tim</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Tanggal Kedatangan</TableHead>
-                                            <TableHead>Masa Penugasan</TableHead>
-                                            <TableHead>Kapasitas Rawat Jalan</TableHead>
+                                            <TableHead className="w-[200px]">
+                                                <button
+                                                    onClick={() => handleSort('nama_dmt')}
+                                                    className="flex items-center hover:text-primary transition-colors"
+                                                >
+                                                    Nama DMT
+                                                    {getSortIcon('nama_dmt')}
+                                                </button>
+                                            </TableHead>
+                                            <TableHead>
+                                                <button
+                                                    onClick={() => handleSort('nama_ketua_tim')}
+                                                    className="flex items-center hover:text-primary transition-colors"
+                                                >
+                                                    Ketua Tim
+                                                    {getSortIcon('nama_ketua_tim')}
+                                                </button>
+                                            </TableHead>
+                                            <TableHead>
+                                                <button
+                                                    onClick={() => handleSort('status_penugasan')}
+                                                    className="flex items-center hover:text-primary transition-colors"
+                                                >
+                                                    Status
+                                                    {getSortIcon('status_penugasan')}
+                                                </button>
+                                            </TableHead>
+                                            <TableHead>
+                                                <button
+                                                    onClick={() => handleSort('tanggal_kedatangan')}
+                                                    className="flex items-center hover:text-primary transition-colors"
+                                                >
+                                                    Tanggal Kedatangan
+                                                    {getSortIcon('tanggal_kedatangan')}
+                                                </button>
+                                            </TableHead>
+                                            <TableHead>
+                                                <button
+                                                    onClick={() => handleSort('masa_penugasan_hari')}
+                                                    className="flex items-center hover:text-primary transition-colors"
+                                                >
+                                                    Masa Penugasan
+                                                    {getSortIcon('masa_penugasan_hari')}
+                                                </button>
+                                            </TableHead>
+                                            <TableHead>
+                                                <button
+                                                    onClick={() => handleSort('kapasitas_rawat_jalan')}
+                                                    className="flex items-center hover:text-primary transition-colors"
+                                                >
+                                                    Kapasitas Rawat Jalan
+                                                    {getSortIcon('kapasitas_rawat_jalan')}
+                                                </button>
+                                            </TableHead>
                                             <TableHead>Kontak</TableHead>
                                             <TableHead className="text-right">Aksi</TableHead>
                                         </TableRow>
@@ -475,11 +888,8 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                                                 <TableCell>
                                                     {dmt.status_penugasan ? (
                                                         <Badge
-                                                            variant={
-                                                                dmt.status_penugasan.toLowerCase() === 'aktif'
-                                                                    ? 'default'
-                                                                    : 'secondary'
-                                                            }
+                                                            variant={getStatusBadgeStyle(dmt.status_penugasan).variant}
+                                                            className={getStatusBadgeStyle(dmt.status_penugasan).className}
                                                         >
                                                             {dmt.status_penugasan}
                                                         </Badge>
@@ -542,7 +952,7 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                                         {/* Previous Button */}
                                         {dmtData.current_page > 1 && paginationLinks[0]?.url && (
                                             <Link
-                                                href={paginationLinks[0].url}
+                                                href={paginationLinks[0].url || '#'}
                                                 className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
                                                 preserveScroll
                                             >
@@ -569,11 +979,10 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                                                     <Link
                                                         key={link.url}
                                                         href={link.url}
-                                                        className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                                                            link.active
-                                                                ? 'border-primary bg-primary text-primary-foreground'
-                                                                : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
-                                                        }`}
+                                                        className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${link.active
+                                                            ? 'border-primary bg-primary text-primary-foreground'
+                                                            : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                                                            }`}
                                                         preserveScroll
                                                     >
                                                         {link.label}
@@ -583,9 +992,9 @@ export default function Informasi({ dmtData, statistics }: InformasiProps) {
                                         </div>
 
                                         {/* Next Button */}
-                                        {dmtData.current_page < dmtData.last_page && paginationLinks[paginationLinks.length - 1]?.url && (
+                                        {dmtData.next_page_url && (
                                             <Link
-                                                href={paginationLinks[paginationLinks.length - 1].url as string}
+                                                href={dmtData.next_page_url}
                                                 className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
                                                 preserveScroll
                                             >

@@ -18,7 +18,12 @@ class ReportLinkController extends Controller
      */
     public function index(Request $request): Response
     {
-        $links = ReportLink::orderBy('title')->get()->map(function ($link) {
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        
+        $links = ReportLink::where('disaster_id', $disasterId)
+            ->orderBy('title')
+            ->get()
+            ->map(function ($link) {
             $totalDates = ReportDate::where('report_link_id', $link->id)->count();
             
             return [
@@ -53,6 +58,7 @@ class ReportLinkController extends Controller
             'title' => $validated['title'],
             'is_public' => $validated['is_public'] ?? true,
             'gdrive_url' => $validated['gdrive_url'],
+            'disaster_id' => $request->session()->get('admin_active_disaster_id'),
         ]);
 
         // Auto-scan the PDF folder immediately
@@ -82,8 +88,12 @@ class ReportLinkController extends Controller
             'gdrive_url' => $validated['gdrive_url'],
         ]);
 
+        // Refresh model to ensure we have the latest data
+        $reportLink->refresh();
+
         // Re-scan the PDF folder if URL changed
         try {
+            // Pass link ID only, method will get latest URL from database
             $this->scanAndSaveReportDates($reportLink->id, $validated['gdrive_url']);
             return redirect()->route('kelola-report')->with('success', 'Link report berhasil diperbarui dan di-scan ulang.');
         } catch (\Exception $e) {
@@ -229,6 +239,7 @@ class ReportLinkController extends Controller
      */
     private function scanAndSaveReportDates(int $reportLinkId, string $gdriveUrl): void
     {
+        // Always get the latest link from database to ensure we use the most recent URL
         $link = ReportLink::find($reportLinkId);
         if (!$link) {
             throw new \Exception('Report link tidak ditemukan.');
@@ -242,8 +253,8 @@ class ReportLinkController extends Controller
             throw new \Exception('Google Drive API key belum dikonfigurasi.');
         }
 
-        // Extract folder ID from URL
-        $mainFolderId = $this->extractFolderId($gdriveUrl);
+        // Always use the link from database, not the parameter
+        $mainFolderId = $this->extractFolderId($link->gdrive_url);
         if (!$mainFolderId) {
             throw new \Exception('Format link Google Drive tidak valid.');
         }
@@ -356,44 +367,27 @@ class ReportLinkController extends Controller
     }
 
     /**
-     * Parse date from folder name (e.g., "7 Des 2025", "7 Desember 2025").
+     * Parse date from folder name (e.g., "2025-12-07", "2025-12-7").
+     * Format: YYYY-MM-DD
      */
     private function parseDateFromFolderName(string $folderName): ?string
     {
-        // Indonesian month names
-        $months = [
-            'januari' => '01', 'jan' => '01',
-            'februari' => '02', 'feb' => '02',
-            'maret' => '03', 'mar' => '03',
-            'april' => '04', 'apr' => '04',
-            'mei' => '05', 'may' => '05',
-            'juni' => '06', 'jun' => '06',
-            'juli' => '07', 'jul' => '07',
-            'agustus' => '08', 'agu' => '08', 'aug' => '08',
-            'september' => '09', 'sep' => '09',
-            'oktober' => '10', 'okt' => '10', 'oct' => '10',
-            'november' => '11', 'nov' => '11',
-            'desember' => '12', 'des' => '12', 'dec' => '12',
-        ];
+        // Normalize folder name: remove extra spaces, trim
+        $normalized = trim($folderName);
 
-        // Normalize folder name: remove extra spaces, convert to lowercase
-        $normalized = strtolower(trim($folderName));
-        $normalized = preg_replace('/\s+/', ' ', $normalized);
+        // Pattern: YYYY-MM-DD (e.g., "2025-12-07", "2025-12-7")
+        // Accepts both 2-digit and 1-digit day/month
+        if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $normalized, $matches)) {
+            $year = (int)$matches[1];
+            $month = (int)$matches[2];
+            $day = (int)$matches[3];
 
-        // Pattern: day month year (e.g., "7 des 2025", "7 desember 2025")
-        if (preg_match('/^(\d+)\s+([a-z]+)\s+(\d{4})$/', $normalized, $matches)) {
-            $day = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
-            $monthName = $matches[2];
-            $year = $matches[3];
-
-            if (isset($months[$monthName])) {
-                $month = $months[$monthName];
-                $date = "$year-$month-$day";
-                
-                // Validate date
-                if (checkdate((int)$month, (int)$day, (int)$year)) {
-                    return $date;
-                }
+            // Validate date
+            if (checkdate($month, $day, $year)) {
+                // Format as YYYY-MM-DD with leading zeros
+                $month = str_pad($month, 2, '0', STR_PAD_LEFT);
+                $day = str_pad($day, 2, '0', STR_PAD_LEFT);
+                return "$year-$month-$day";
             }
         }
 

@@ -18,12 +18,16 @@ class InfografisController extends Controller
      */
     public function index(Request $request): Response
     {
-        $infografisLink = InfografisLink::first();
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        $infografisLink = InfografisLink::where('disaster_id', $disasterId)->first();
+
         $perPage = $request->get('per_page', 12);
         $page = $request->get('page', 1);
 
-        // Get all infografis and sort naturally in PHP
-        $allInfografis = Infografis::get()->map(function ($item) {
+        // Get all infografis for this link
+        $query = $infografisLink ? Infografis::where('infografis_link_id', $infografisLink->id) : Infografis::whereRaw('1 = 0');
+
+        $allInfografis = $query->get()->map(function ($item) {
             // Ensure URL format is correct for embedding
             $item->file_url = $this->ensureCorrectImageUrl($item->file_id, $item->file_url);
             $item->thumbnail_url = $item->thumbnail_url ? $this->ensureCorrectImageUrl($item->file_id, $item->thumbnail_url) : $item->file_url;
@@ -62,8 +66,19 @@ class InfografisController extends Controller
         $perPage = $request->get('per_page', 12);
         $page = $request->get('page', 1);
 
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+
+        $query = Infografis::whereRaw('1 = 0');
+
+        if ($activeDisaster) {
+            $query = Infografis::whereHas('infografisLink', function($q) use ($activeDisaster) {
+                $q->where('disaster_id', $activeDisaster->id);
+            });
+        }
+
         // Get all infografis and sort naturally in PHP
-        $allInfografis = Infografis::get()->map(function ($item) {
+        $allInfografis = $query->get()->map(function ($item) {
             // Ensure URL format is correct for embedding
             $item->file_url = $this->ensureCorrectImageUrl($item->file_id, $item->file_url);
             $item->thumbnail_url = $item->thumbnail_url ? $this->ensureCorrectImageUrl($item->file_id, $item->thumbnail_url) : $item->file_url;
@@ -90,6 +105,7 @@ class InfografisController extends Controller
 
         return Inertia::render('infografis', [
             'infografis' => $infografis,
+            'activeDisasterName' => $activeDisaster ? $activeDisaster->name : null,
         ]);
     }
 
@@ -100,7 +116,7 @@ class InfografisController extends Controller
     {
         // Delete all infografis
         Infografis::truncate();
-        
+
         // Delete the link
         $infografisLink->delete();
 
@@ -108,7 +124,7 @@ class InfografisController extends Controller
     }
 
     /**
-     * Store or update infografis folder link and scan for PNG files.
+     * Store or update infografis folder link and scan for files.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -116,12 +132,14 @@ class InfografisController extends Controller
             'gdrive_url' => ['required', 'url', 'max:500'],
         ]);
 
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+
         $infografisLink = InfografisLink::updateOrCreate(
-            ['id' => 1], // Only one link allowed
+            ['disaster_id' => $disasterId],
             ['gdrive_url' => $validated['gdrive_url']]
         );
 
-        // Scan Google Drive folder and list all PNG files
+        // Scan Google Drive folder and list all files
         try {
             $this->scanFolderForImages($validated['gdrive_url'], $infografisLink->id);
         } catch (\Exception $e) {
@@ -138,8 +156,9 @@ class InfografisController extends Controller
      */
     public function scan(Request $request): RedirectResponse
     {
-        $infografisLink = InfografisLink::first();
-        
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        $infografisLink = InfografisLink::where('disaster_id', $disasterId)->first();
+
         if (!$infografisLink) {
             return redirect()->route('kelola-infografis')->with('error', 'Link Google Drive folder belum diatur.');
         }
@@ -159,8 +178,17 @@ class InfografisController extends Controller
     public function autoScan(Request $request): JsonResponse
     {
         try {
-            $infografisLink = InfografisLink::first();
-            
+            // Get active disaster
+            $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+            if (!$activeDisaster) {
+                 return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada bencana aktif.',
+                ], 404);
+            }
+
+            $infografisLink = InfografisLink::where('disaster_id', $activeDisaster->id)->first();
+
             if (!$infografisLink) {
                 return response()->json([
                     'success' => false,
@@ -169,7 +197,7 @@ class InfografisController extends Controller
             }
 
             $this->scanFolderForImages($infografisLink->gdrive_url, $infografisLink->id);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Infografis berhasil di-scan ulang.',
@@ -184,7 +212,7 @@ class InfografisController extends Controller
     }
 
     /**
-     * Scan Google Drive folder and list all PNG/image files.
+     * Scan Google Drive folder and list all files (images, PDF, etc.).
      */
     private function scanFolderForImages(string $folderUrl, int $linkId): void
     {
@@ -199,7 +227,7 @@ class InfografisController extends Controller
             throw new \Exception('Format link Google Drive folder tidak valid.');
         }
 
-        // Get all image files (PNG, JPG, JPEG) in the folder
+        // Get all files (images, PDF, etc.) in the folder
         // Data sudah diurutkan secara natural di getImagesInFolder
         $images = $this->getImagesInFolder($folderId, $apiKey);
 
@@ -241,13 +269,13 @@ class InfografisController extends Controller
     }
 
     /**
-     * Get all image files (PNG, JPG, JPEG) in a folder.
+     * Get all files (images, PDF, etc.) in a folder.
      */
     private function getImagesInFolder(string $folderId, string $apiKey): array
     {
         $url = "https://www.googleapis.com/drive/v3/files";
-        // Query for PNG, JPG, JPEG files
-        $query = "'{$folderId}' in parents and (mimeType='image/png' or mimeType='image/jpeg' or mimeType='image/jpg') and trashed=false";
+        // Query for image files (PNG, JPG, JPEG, GIF, WEBP) and PDF files
+        $query = "'{$folderId}' in parents and (mimeType='image/png' or mimeType='image/jpeg' or mimeType='image/jpg' or mimeType='image/gif' or mimeType='image/webp' or mimeType='application/pdf') and trashed=false";
 
         $verifySSL = env('GOOGLE_DRIVE_VERIFY_SSL', env('APP_ENV') === 'production');
 
@@ -268,14 +296,21 @@ class InfografisController extends Controller
             $result = [];
             foreach ($files as $file) {
                 $fileId = $file['id'];
+                $mimeType = $file['mimeType'] ?? 'image/png';
 
-                // Generate direct image URL using uc?export=view format
-                // This format works for public files and can be embedded
-                $imageUrl = "https://drive.google.com/uc?export=view&id={$fileId}";
+                // Generate URL based on file type
+                // For PDF, use preview format; for images, use view format
+                if ($mimeType === 'application/pdf') {
+                    $fileUrl = "https://drive.google.com/file/d/{$fileId}/preview";
+                } else {
+                    // Generate direct image URL using uc?export=view format
+                    // This format works for public files and can be embedded
+                    $fileUrl = "https://drive.google.com/uc?export=view&id={$fileId}";
+                }
 
                 // For thumbnail, try to use thumbnailLink from API first
-                // If not available, use the same format as imageUrl
-                $thumbnailUrl = $imageUrl;
+                // If not available, use the same format as fileUrl
+                $thumbnailUrl = $fileUrl;
                 if (isset($file['thumbnailLink']) && !empty($file['thumbnailLink'])) {
                     // Use thumbnailLink directly - it's already a valid URL
                     $thumbnailUrl = $file['thumbnailLink'];
@@ -284,10 +319,10 @@ class InfografisController extends Controller
                 $result[] = [
                     'id' => $fileId,
                     'name' => $file['name'],
-                    'url' => $imageUrl,
+                    'url' => $fileUrl,
                     'thumbnail_url' => $thumbnailUrl,
                     'size' => isset($file['size']) ? (int)$file['size'] : null,
-                    'mime_type' => $file['mimeType'] ?? 'image/png',
+                    'mime_type' => $mimeType,
                 ];
             }
 
@@ -303,25 +338,35 @@ class InfografisController extends Controller
     }
 
     /**
-     * Display preview page for infografis image (centered, opens in new tab).
+     * Display preview page for infografis file (centered, opens in new tab).
      */
     public function preview($id)
     {
         $infografis = Infografis::findOrFail($id);
-        
-        // Use proxy URL to avoid CORS issues
-        $imageUrl = route('infografis.image', ['id' => $infografis->id]);
-        
+
+        $isPdf = $infografis->mime_type === 'application/pdf';
+
+        // For PDF, use Google Drive preview URL directly (always use direct link)
+        // For images, use proxy URL to avoid CORS issues
+        if ($isPdf) {
+            // Always use direct Google Drive preview link for PDF
+            $previewUrl = "https://drive.google.com/file/d/{$infografis->file_id}/preview";
+        } else {
+            $previewUrl = route('infografis.image', ['id' => $infografis->id]);
+        }
+
         return response()->view('infografis-preview', [
-            'imageUrl' => $imageUrl,
+            'previewUrl' => $previewUrl,
             'fileName' => $infografis->file_name,
             'fileId' => $infografis->file_id,
             'id' => $infografis->id,
+            'isPdf' => $isPdf,
+            'mimeType' => $infografis->mime_type,
         ]);
     }
 
     /**
-     * Proxy image from Google Drive to avoid CORS issues.
+     * Proxy file from Google Drive to avoid CORS issues.
      */
     public function image($id)
     {
@@ -331,13 +376,20 @@ class InfografisController extends Controller
             \Log::error('Infografis not found: ' . $id);
             abort(404, 'Infografis tidak ditemukan');
         }
-        
+
         // Use the stored file_url if available, otherwise construct from file_id
-        $imageUrl = $infografis->file_url ?: "https://drive.google.com/uc?export=view&id=" . $infografis->file_id;
-        
+        $isPdf = $infografis->mime_type === 'application/pdf';
+        if ($infografis->file_url) {
+            $imageUrl = $infografis->file_url;
+        } else {
+            $imageUrl = $isPdf
+                ? "https://drive.google.com/file/d/{$infografis->file_id}/preview"
+                : "https://drive.google.com/uc?export=view&id=" . $infografis->file_id;
+        }
+
         try {
             $verifySSL = env('GOOGLE_DRIVE_VERIFY_SSL', env('APP_ENV') === 'production');
-            
+
             $response = Http::withOptions([
                 'verify' => $verifySSL,
                 'headers' => [
@@ -346,11 +398,11 @@ class InfografisController extends Controller
                 ],
                 'allow_redirects' => true,
             ])->timeout(15)->get($imageUrl);
-            
+
             if ($response->successful()) {
                 $contentType = $response->header('Content-Type');
-                
-                // Check if response is HTML (redirect page) instead of image
+
+                // Check if response is HTML (redirect page) instead of file
                 if ($contentType && strpos($contentType, 'text/html') !== false) {
                     // Try alternative URL format
                     $altUrl = "https://drive.google.com/uc?export=download&id=" . $infografis->file_id;
@@ -362,21 +414,21 @@ class InfografisController extends Controller
                         ],
                         'allow_redirects' => true,
                     ])->timeout(15)->get($altUrl);
-                    
+
                     $contentType = $response->header('Content-Type');
                 }
-                
+
                 // If still HTML, return error
                 if ($contentType && strpos($contentType, 'text/html') !== false) {
-                    \Log::error('Google Drive returned HTML instead of image for ID: ' . $id);
-                    abort(404, 'Gambar tidak dapat diakses. Pastikan file Google Drive dapat diakses publik.');
+                    \Log::error('Google Drive returned HTML instead of file for ID: ' . $id);
+                    abort(404, 'File tidak dapat diakses. Pastikan file Google Drive dapat diakses publik.');
                 }
-                
-                // Default content type
-                if (!$contentType || strpos($contentType, 'image/') !== 0) {
-                    $contentType = 'image/png';
+
+                // Default content type based on mime_type
+                if (!$contentType || (strpos($contentType, 'image/') !== 0 && strpos($contentType, 'application/pdf') !== 0)) {
+                    $contentType = $infografis->mime_type ?: 'image/png';
                 }
-                
+
                 return response($response->body(), 200)
                     ->header('Content-Type', $contentType)
                     ->header('Access-Control-Allow-Origin', '*')
@@ -386,13 +438,13 @@ class InfografisController extends Controller
         } catch (\Exception $e) {
             \Log::error('Failed to proxy image for infografis ID ' . $id . ': ' . $e->getMessage());
         }
-        
+
         // If all fails, return 404
-        abort(404, 'Gambar tidak dapat dimuat');
+        abort(404, 'File tidak dapat dimuat');
     }
 
     /**
-     * Download infografis image.
+     * Download infografis file.
      */
     public function download($id)
     {
@@ -401,13 +453,18 @@ class InfografisController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             abort(404, 'Infografis tidak ditemukan');
         }
-        
+
         // Use the stored file_url if available, otherwise construct from file_id
-        $imageUrl = $infografis->file_url ?: "https://drive.google.com/uc?export=download&id=" . $infografis->file_id;
-        
+        $isPdf = $infografis->mime_type === 'application/pdf';
+        if ($infografis->file_url) {
+            $imageUrl = $infografis->file_url;
+        } else {
+            $imageUrl = "https://drive.google.com/uc?export=download&id=" . $infografis->file_id;
+        }
+
         try {
             $verifySSL = env('GOOGLE_DRIVE_VERIFY_SSL', env('APP_ENV') === 'production');
-            
+
             $response = Http::withOptions([
                 'verify' => $verifySSL,
                 'headers' => [
@@ -416,11 +473,11 @@ class InfografisController extends Controller
                 ],
                 'allow_redirects' => true,
             ])->timeout(15)->get($imageUrl);
-            
+
             if ($response->successful()) {
                 $contentType = $response->header('Content-Type');
-                
-                // Check if response is HTML (redirect page) instead of image
+
+                // Check if response is HTML (redirect page) instead of file
                 if ($contentType && strpos($contentType, 'text/html') !== false) {
                     // Try alternative URL format for download
                     $altUrl = "https://drive.google.com/uc?export=download&id=" . $infografis->file_id;
@@ -432,34 +489,40 @@ class InfografisController extends Controller
                         ],
                         'allow_redirects' => true,
                     ])->timeout(15)->get($altUrl);
-                    
+
                     $contentType = $response->header('Content-Type');
                 }
-                
-                // Default content type
-                if (!$contentType || strpos($contentType, 'image/') !== 0) {
+
+                // Default content type based on mime_type
+                if (!$contentType || (strpos($contentType, 'image/') !== 0 && strpos($contentType, 'application/pdf') !== 0)) {
                     $contentType = $infografis->mime_type ?: 'image/png';
                 }
-                
+
                 // Get file extension from filename or content type
                 $extension = pathinfo($infografis->file_name, PATHINFO_EXTENSION);
                 if (!$extension) {
-                    $extension = $contentType === 'image/jpeg' || $contentType === 'image/jpg' ? 'jpg' : 'png';
+                    if ($contentType === 'application/pdf') {
+                        $extension = 'pdf';
+                    } elseif ($contentType === 'image/jpeg' || $contentType === 'image/jpg') {
+                        $extension = 'jpg';
+                    } else {
+                        $extension = 'png';
+                    }
                 }
-                
+
                 $downloadName = pathinfo($infografis->file_name, PATHINFO_FILENAME) . '.' . $extension;
-                
+
                 return response($response->body(), 200)
                     ->header('Content-Type', $contentType)
                     ->header('Content-Disposition', 'attachment; filename="' . $downloadName . '"')
                     ->header('Cache-Control', 'public, max-age=3600');
             }
         } catch (\Exception $e) {
-            \Log::error('Failed to download image for infografis ID ' . $id . ': ' . $e->getMessage());
+            \Log::error('Failed to download file for infografis ID ' . $id . ': ' . $e->getMessage());
         }
-        
+
         // If all fails, return 404
-        abort(404, 'Gambar tidak dapat diunduh');
+        abort(404, 'File tidak dapat diunduh');
     }
 
     /**

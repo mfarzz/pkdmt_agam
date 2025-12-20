@@ -7,6 +7,7 @@ import {
     useMotionValueEvent,
 } from 'motion/react';
 import React, { useState } from 'react';
+import { usePage } from '@inertiajs/react';
 
 interface NavbarProps {
     children: React.ReactNode;
@@ -116,6 +117,8 @@ export const NavItems = ({
     onItemClick,
 }: NavItemsProps) => {
     const [hovered, setHovered] = useState<number | null>(null);
+    const page = usePage();
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : page.url.split('?')[0];
 
     return (
         <motion.div
@@ -125,23 +128,32 @@ export const NavItems = ({
                 className,
             )}
         >
-            {items.map((item, idx) => (
+            {items.map((item, idx) => {
+                const isActive = currentPath === item.link || (item.link !== '/' && currentPath.startsWith(item.link));
+                return (
                 <a
                     onMouseEnter={() => setHovered(idx)}
                     onClick={onItemClick}
-                    className="relative px-4 py-2 text-neutral-600"
+                        className={cn(
+                            "relative px-4 py-2 transition-colors",
+                            isActive ? "text-primary font-semibold" : "text-neutral-600"
+                        )}
                     key={`link-${idx}`}
                     href={item.link}
                 >
-                    {hovered === idx && (
+                        {(hovered === idx || isActive) && (
                         <motion.div
                             layoutId="hovered"
-                            className="absolute inset-0 h-full w-full rounded-full bg-gray-100"
+                                className={cn(
+                                    "absolute inset-0 h-full w-full rounded-full",
+                                    isActive ? "bg-primary/10" : "bg-gray-100"
+                                )}
                         />
                     )}
                     <span className="relative z-20">{item.name}</span>
                 </a>
-            ))}
+                );
+            })}
         </motion.div>
     );
 };

@@ -18,7 +18,8 @@ class LaporanExcelController extends Controller
      */
     public function index(Request $request): InertiaResponse
     {
-        $excelFile = LaporanExcelFile::where('is_active', true)->first();
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        $excelFile = LaporanExcelFile::where('disaster_id', $disasterId)->where('is_active', true)->first();
 
         return Inertia::render('admin/kelola-laporan-excel', [
             'excelFile' => $excelFile,
@@ -87,8 +88,9 @@ class LaporanExcelController extends Controller
         }
 
         try {
-            // Deactivate all existing files
-            LaporanExcelFile::where('is_active', true)->update(['is_active' => false]);
+            // Deactivate all existing files for this disaster
+            $disasterId = $request->session()->get('admin_active_disaster_id');
+            LaporanExcelFile::where('disaster_id', $disasterId)->where('is_active', true)->update(['is_active' => false]);
 
             // Get mime type with fallback
             try {
@@ -117,6 +119,7 @@ class LaporanExcelController extends Controller
                 'file_size' => $file->getSize(),
                 'mime_type' => $mimeType,
                 'is_active' => true,
+                'disaster_id' => $disasterId,
             ]);
 
             return redirect()->route('kelola-laporan-excel')->with('success', 'File Excel berhasil diunggah.');
@@ -133,7 +136,13 @@ class LaporanExcelController extends Controller
      */
     public function download(): StreamedResponse
     {
-        $excelFile = LaporanExcelFile::where('is_active', true)->first();
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+        if (!$activeDisaster) {
+            abort(404, 'Tidak ada bencana aktif.');
+        }
+
+        $excelFile = LaporanExcelFile::where('disaster_id', $activeDisaster->id)->where('is_active', true)->first();
 
         if (!$excelFile) {
             abort(404, 'File Excel tidak ditemukan.');

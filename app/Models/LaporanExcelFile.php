@@ -11,15 +11,19 @@ class LaporanExcelFile extends Model
 
     protected $fillable = [
         'file_name',
-        'file_path',
+        'path',
         'original_name',
-        'file_size',
         'mime_type',
         'is_active',
+        'disaster_id',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'file_size' => 'integer',
     ];
+
+    public function disaster()
+    {
+        return $this->belongsTo(Disaster::class);
+    }
 }

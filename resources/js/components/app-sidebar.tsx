@@ -9,32 +9,50 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
+import { type NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, FileText, Home, Link2, FileSpreadsheet, Image, Users, FileSpreadsheet as FileExcel } from 'lucide-react';
+import { AlertTriangle, FileCheck, FileSpreadsheet as FileExcel, FileSpreadsheet, FileText, Home, Image, LayoutGrid, Link2, Users, LayoutDashboard, BookOpen } from 'lucide-react';
 import AppLogo from './app-logo';
 
-const mainNavItems: NavItem[] = [
+const mainNavGroups: NavGroup[] = [
+    {
+        title: 'Pengaturan Sistem',
+        items: [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+    },
     {
         title: 'Manajemen User',
-        href: '/dashboard',
+        href: '/manajemen-user',
         icon: LayoutGrid,
     },
     {
-        title: 'Kelola DMT',
-        href: '/kelola-dmt',
-        icon: Users,
+        title: 'Kelola Bencana',
+        href: '/kelola-bencana',
+        icon: AlertTriangle,
     },
+        ],
+    },
+    {
+        title: 'Konten Publik',
+        items: [
     {
         title: 'Kelola Infografis',
         href: '/kelola-infografis',
         icon: Image,
     },
     {
-        title: 'Kelola Link',
-        href: '/kelola-link',
-        icon: Link2,
+                title: 'Kelola Pendaftaran',
+                href: '/kelola-pendaftaran',
+                icon: FileCheck,
+            },
+        ],
     },
+    {
+        title: 'Dokumen & Laporan',
+        items: [
     {
         title: 'Kelola Notulensi',
         href: '/kelola-notulensi',
@@ -49,6 +67,18 @@ const mainNavItems: NavItem[] = [
         title: 'Kelola Report',
         href: '/kelola-report',
         icon: FileText,
+            },
+        ],
+    },
+    {
+        title: 'Bantuan',
+        items: [
+    {
+        title: 'Panduan',
+        href: '/panduan',
+        icon: BookOpen,
+            },
+        ],
     },
 ];
 
@@ -80,7 +110,7 @@ export function AppSidebar() {
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </div>
-                <NavMain items={mainNavItems} />
+                <NavMain groups={mainNavGroups} />
             </SidebarContent>
 
             <SidebarFooter>

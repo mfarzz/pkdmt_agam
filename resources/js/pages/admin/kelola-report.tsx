@@ -309,14 +309,14 @@ export default function KelolaReport({ links = [], success }: KelolaReportProps)
                                             id="gdrive_url"
                                             type="url"
                                             value={formData.gdrive_url}
-                                            onChange={(e) => setFormData({ ...formData, gdrive_url: e.target.value })}
+                                            onChange={(e) => setFormData({ ...formData, gdrive_url: e.target.value })}  
                                             placeholder="https://drive.google.com/drive/folders/..."
                                             className="pl-10"
                                             required
                                         />
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                        Masukkan link Google Drive folder utama. Di dalam folder ini harus ada folder "PDF" yang berisi folder per tanggal (format: "8 des 2025").
+                                        Masukkan link Google Drive folder utama. Di dalam folder ini harus ada folder "PDF" yang berisi folder per tanggal (format: "YYYY-MM-DD").
                                     </p>
                                 </div>
                             </div>

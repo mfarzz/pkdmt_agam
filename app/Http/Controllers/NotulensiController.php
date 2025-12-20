@@ -18,7 +18,12 @@ class NotulensiController extends Controller
      */
     public function index(Request $request): Response
     {
-        $links = NotulensiLink::orderBy('title')->get()->map(function ($link) {
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        
+        $links = NotulensiLink::where('disaster_id', $disasterId)
+            ->orderBy('title')
+            ->get()
+            ->map(function ($link) {
             $sheetId = $this->extractSheetId($link->gdrive_url);
             $totalDates = 0;
             $totalTabs = 0;
@@ -68,14 +73,12 @@ class NotulensiController extends Controller
         $link = NotulensiLink::create([
             'title' => $validated['title'],
             'gdrive_url' => $validated['gdrive_url'],
+            'disaster_id' => $request->session()->get('admin_active_disaster_id'),
         ]);
 
         // Auto-scan the sheet immediately
         try {
-            $sheetId = $this->extractSheetId($validated['gdrive_url']);
-            if ($sheetId) {
-                $this->scanAndSaveNotulensiDates($sheetId, $link->id);
-            }
+            $this->scanAndSaveNotulensiDates($link->id);
             return redirect()->route('kelola-notulensi')->with('success', 'Link notulensi berhasil ditambahkan dan di-scan.');
         } catch (\Exception $e) {
             \Log::error('Failed to scan sheet: ' . $e->getMessage());
@@ -98,12 +101,12 @@ class NotulensiController extends Controller
             'gdrive_url' => $validated['gdrive_url'],
         ]);
 
+        // Refresh model to ensure we have the latest data
+        $notulensiLink->refresh();
+
         // Re-scan the sheet if URL changed
         try {
-            $sheetId = $this->extractSheetId($validated['gdrive_url']);
-            if ($sheetId) {
-                $this->scanAndSaveNotulensiDates($sheetId, $notulensiLink->id);
-            }
+            $this->scanAndSaveNotulensiDates($notulensiLink->id);
             return redirect()->route('kelola-notulensi')->with('success', 'Link notulensi berhasil diperbarui dan di-scan ulang.');
         } catch (\Exception $e) {
             \Log::error('Failed to scan sheet: ' . $e->getMessage());
@@ -133,17 +136,18 @@ class NotulensiController extends Controller
     public function autoScanAll(Request $request): JsonResponse
     {
         try {
-            $links = NotulensiLink::all();
+            $links = NotulensiLink::whereHas('disaster', function($q) {
+                $q->where('is_active', true);
+            })->get();
+            
             $scannedCount = 0;
             $errors = [];
             
             foreach ($links as $link) {
                 try {
-                    $sheetId = $this->extractSheetId($link->gdrive_url);
-                    if ($sheetId) {
-                        $this->scanAndSaveNotulensiDates($sheetId, $link->id);
-                        $scannedCount++;
-                    }
+                    // Pass link ID only, method will get latest URL from database
+                    $this->scanAndSaveNotulensiDates($link->id);
+                    $scannedCount++;
                 } catch (\Exception $e) {
                     $errorMsg = "Gagal scan sheet '{$link->title}': " . $e->getMessage();
                     \Log::error($errorMsg);
@@ -176,11 +180,17 @@ class NotulensiController extends Controller
      */
     public function calendar(Request $request): Response
     {
-        // Get all notulensi links
-        $links = NotulensiLink::orderBy('title')->get();
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+        
+        // Get all notulensi links for active disaster
+        $links = $activeDisaster
+            ? NotulensiLink::where('disaster_id', $activeDisaster->id)->orderBy('title')->get()
+            : collect([]);
 
         return Inertia::render('notulensi', [
             'notulensiLinks' => $links,
+            'activeDisasterName' => $activeDisaster ? $activeDisaster->name : null,
         ]);
     }
 
@@ -204,13 +214,29 @@ class NotulensiController extends Controller
         // Check if user is authenticated
         $isAuthenticated = $request->user() !== null;
 
+        // Get active disaster
+        $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
+        if (!$activeDisaster) {
+            return response()->json([
+                'success' => true,
+                'year' => $year,
+                'month' => $month,
+                'notulensi' => [],
+            ]);
+        }
+
         // Get all notulensi links to map sheet_id to title
-        $links = NotulensiLink::all()->keyBy(function ($link) {
+        $links = NotulensiLink::where('disaster_id', $activeDisaster->id)
+            ->get()
+            ->keyBy(function ($link) {
             return $this->extractSheetId($link->gdrive_url);
         });
 
         // Query all dates in this month
-        $notulensiDates = NotulensiDate::whereBetween('date', [$startDate, $endDate])
+        $notulensiDates = NotulensiDate::whereHas('notulensiLink', function($q) use ($activeDisaster) {
+                $q->where('disaster_id', $activeDisaster->id);
+            })
+            ->whereBetween('date', [$startDate, $endDate])
             ->get()
             ->map(function ($notulensiDate) use ($isAuthenticated, $links) {
                 $sheetLink = $notulensiDate->sheet_link;
@@ -261,30 +287,42 @@ class NotulensiController extends Controller
     /**
      * Scan Google Sheet and save all date tabs to database.
      */
-    private function scanAndSaveNotulensiDates(string $sheetId, int $linkId): void
+    private function scanAndSaveNotulensiDates(int $linkId): void
     {
-        // Delete existing dates for this sheet only
-        NotulensiDate::where('sheet_id', $sheetId)->delete();
+        // Always get the latest link from database to ensure we use the most recent URL
+        $link = NotulensiLink::find($linkId);
+        if (!$link) {
+            throw new \Exception('Notulensi link tidak ditemukan.');
+        }
+
+        // Extract sheet ID from the latest link in database
+        $latestSheetId = $this->extractSheetId($link->gdrive_url);
+        if (!$latestSheetId) {
+            throw new \Exception('Format link Google Sheets tidak valid.');
+        }
+
+        // Delete existing dates for this sheet only (use latest sheet ID)
+        NotulensiDate::where('sheet_id', $latestSheetId)->delete();
 
         $apiKey = config('services.google.drive_api_key');
         if (!$apiKey) {
             throw new \Exception('Google Drive API key belum dikonfigurasi.');
         }
 
-        // Get sheet metadata using Google Sheets API v4
-        $sheetInfo = $this->getSheetInfo($sheetId, $apiKey);
+        // Get sheet metadata using Google Sheets API v4 (use latest sheet ID)
+        $sheetInfo = $this->getSheetInfo($latestSheetId, $apiKey);
         $sheets = $sheetInfo['sheets'];
 
         // Parse and save each tab
         foreach ($sheets as $sheet) {
             $date = $this->parseDateFromTabName($sheet['title']);
             if ($date) {
-                $sheetLink = "https://docs.google.com/spreadsheets/d/{$sheetId}/edit#gid={$sheet['sheetId']}";
+                $sheetLink = "https://docs.google.com/spreadsheets/d/{$latestSheetId}/edit#gid={$sheet['sheetId']}";
                 
                 NotulensiDate::updateOrCreate(
                     [
                         'date' => $date,
-                        'sheet_id' => $sheetId,
+                        'sheet_id' => $latestSheetId,
                     ],
                     [
                         'notulensi_link_id' => $linkId,
@@ -354,44 +392,27 @@ class NotulensiController extends Controller
     }
 
     /**
-     * Parse date from tab name.
-     * Supports formats: "11 Des 2025", "7 Desember 2025", etc.
+     * Parse date from tab name (e.g., "2025-12-07", "2025-12-7").
+     * Format: YYYY-MM-DD
      */
     private function parseDateFromTabName(string $tabName): ?string
     {
-        // Indonesian month names
-        $months = [
-            'januari' => '01', 'jan' => '01',
-            'februari' => '02', 'feb' => '02',
-            'maret' => '03', 'mar' => '03',
-            'april' => '04', 'apr' => '04',
-            'mei' => '05', 'may' => '05',
-            'juni' => '06', 'jun' => '06',
-            'juli' => '07', 'jul' => '07',
-            'agustus' => '08', 'agu' => '08', 'aug' => '08',
-            'september' => '09', 'sep' => '09',
-            'oktober' => '10', 'okt' => '10', 'oct' => '10',
-            'november' => '11', 'nov' => '11',
-            'desember' => '12', 'des' => '12', 'dec' => '12',
-        ];
+        // Normalize tab name: remove extra spaces, trim
+        $normalized = trim($tabName);
 
-        // Normalize tab name
-        $normalized = strtolower(trim($tabName));
-        $normalized = preg_replace('/\s+/', ' ', $normalized);
+        // Pattern: YYYY-MM-DD (e.g., "2025-12-07", "2025-12-7")
+        // Accepts both 2-digit and 1-digit day/month
+        if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $normalized, $matches)) {
+            $year = (int)$matches[1];
+            $month = (int)$matches[2];
+            $day = (int)$matches[3];
 
-        // Try format: "11 Des 2025" or "11 Desember 2025"
-        if (preg_match('/^(\d+)\s+([a-z]+)\s+(\d{4})$/', $normalized, $matches)) {
-            $day = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
-            $monthName = $matches[2];
-            $year = $matches[3];
-
-            if (isset($months[$monthName])) {
-                $month = $months[$monthName];
-                $date = "$year-$month-$day";
-                
-                if (checkdate((int)$month, (int)$day, (int)$year)) {
-                    return $date;
-                }
+            // Validate date
+            if (checkdate($month, $day, $year)) {
+                // Format as YYYY-MM-DD with leading zeros
+                $month = str_pad($month, 2, '0', STR_PAD_LEFT);
+                $day = str_pad($day, 2, '0', STR_PAD_LEFT);
+                return "$year-$month-$day";
             }
         }
 

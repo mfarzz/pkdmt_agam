@@ -1,16 +1,12 @@
-import { Head, Link } from '@inertiajs/react';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, UserPlus, BookOpen, Users, FileEdit, BarChart3 } from 'lucide-react';
-import AppNavbar from '@/components/app-navbar';
 import AppFooter from '@/components/app-footer';
+import AppNavbar from '@/components/app-navbar';
+import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Head, Link } from '@inertiajs/react';
+import { BarChart3, BookOpen, FileEdit, FileText, UserPlus, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
 
 interface BencanaProps {
-    registrationLink?: {
-        id: number;
-        name: string;
-        url: string;
-        description: string | null;
-    };
     excelFile?: {
         id: number;
         file_name: string;
@@ -22,30 +18,35 @@ interface BencanaProps {
         created_at: string;
         updated_at: string;
     };
+    activeDisasterName?: string;
 }
 
-const menuItems = (registrationLink?: BencanaProps['registrationLink'], excelFile?: BencanaProps['excelFile']) => [
+const menuItems = (excelFile?: BencanaProps['excelFile']) => [
     {
         title: 'Informasi Umum',
         description: 'Akses informasi umum tentang Kabupaten Agam',
+        fullDescription: 'Halaman ini menyediakan akses ke berbagai informasi umum tentang Kabupaten Agam, termasuk infografis, data statistik, dan informasi penting lainnya yang relevan dengan penanganan bencana dan manajemen Disaster Medical Team.',
         href: '/infografis',
         icon: FileText,
     },
     {
-        title: registrationLink?.name || 'Link Registrasi',
-        description: registrationLink?.description || 'Daftar akun baru untuk mengakses sistem',
-        href: registrationLink?.url || '#',
+        title: 'Pendaftaran DMT',
+        description: 'Formulir pendaftaran Disaster Medical Team',
+        fullDescription: 'Formulir pendaftaran untuk tim Disaster Medical Team (DMT) yang ingin terlibat dalam penanganan bencana. Tim dapat mendaftarkan diri dengan mengisi data lengkap termasuk kapasitas layanan, komposisi anggota tim, dan dokumen pendukung yang diperlukan.',
+        href: '/pendaftaran-dmt',
         icon: UserPlus,
     },
     {
         title: 'Panduan Layanan EMT MDS',
         description: 'Panduan penggunaan layanan EMT MDS',
+        fullDescription: 'Panduan lengkap untuk menggunakan layanan Emergency Medical Team - Minimum Data Set (EMT MDS). Panduan ini mencakup cara pengisian data, standar pelaporan, dan prosedur operasional yang harus diikuti oleh tim medis.',
         href: '/panduan-emt',
         icon: BookOpen,
     },
     {
         title: 'Notulensi Rapat Koordinasi',
         description: 'Notulensi rapat koordinasi',
+        fullDescription: 'Akses ke notulensi dan dokumentasi dari berbagai rapat koordinasi yang telah dilaksanakan. Notulensi ini mencakup pembahasan strategi penanganan bencana, koordinasi antar tim, dan keputusan-keputusan penting yang telah diambil.',
         href: '/notulensi',
         icon: Users,
     },
@@ -53,18 +54,34 @@ const menuItems = (registrationLink?: BencanaProps['registrationLink'], excelFil
         title: 'Pengisian Laporan',
         description: 'Download file Excel untuk pengisian laporan.',
         descriptionHighlight: 'Pengisian dilakukan hanya oleh admin.',
+        fullDescription: 'Fitur ini memungkinkan admin untuk mengunduh file Excel template yang digunakan untuk pengisian laporan. File Excel ini berisi format standar yang harus diikuti untuk memastikan konsistensi data dan kemudahan dalam pengolahan laporan selanjutnya.',
         href: excelFile ? `/laporan-excel/download` : '#',
         icon: FileEdit,
     },
     {
         title: 'Rekap Data',
         description: 'Lihat rekap dan statistik data',
+        fullDescription: 'Halaman rekap data menyediakan ringkasan dan statistik lengkap dari semua data yang telah dikumpulkan. Termasuk data tim DMT, laporan kegiatan, dan berbagai metrik penting lainnya yang dapat digunakan untuk evaluasi dan perencanaan selanjutnya.',
         href: '/rekap',
         icon: BarChart3,
     },
 ];
 
-export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
+export default function Bencana({ excelFile, activeDisasterName }: BencanaProps) {
+    const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
+    
+    const toggleExpand = (index: number) => {
+        setExpandedItems(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(index)) {
+                newSet.delete(index);
+            } else {
+                newSet.add(index);
+            }
+            return newSet;
+        });
+    };
+
     const navItems = [
         {
             name: 'Beranda',
@@ -85,151 +102,104 @@ export default function Bencana({ registrationLink, excelFile }: BencanaProps) {
                 <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 relative z-10 pt-24 flex-1">
                     <div className="mb-8 text-center">
                         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                             Pusat Komando Disaster Medical Team
+                            Pusat Komando Disaster Medical Team
                         </h1>
                         <p className="mt-2 text-lg text-muted-foreground">
-                            Kabupaten Agam
+                            {activeDisasterName || 'Kabupaten Agam'}
                         </p>
                     </div>
 
-                    <div className="relative max-w-4xl mx-auto">
-                        {/* Garis vertikal utama di tengah */}
-                        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-primary/30 hidden md:block"></div>
-
-                        <div className="relative space-y-8 md:space-y-12">
-                            {menuItems(registrationLink, excelFile).map((item, index) => {
+                    <div className="max-w-5xl mx-auto">
+                        <div className="space-y-4">
+                            {menuItems(excelFile).map((item, index) => {
                                 const Icon = item.icon;
-                                const items = menuItems(registrationLink);
-                                const isLast = index === items.length - 1;
-                                const isEven = index % 2 === 0;
+                                const isExpanded = expandedItems.has(index);
+
+                                const cardContent = (
+                                    <Card className="w-full transition-all hover:shadow-md">
+                                                    <CardHeader>
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex items-center gap-3 flex-1">
+                                                    <div className="rounded-lg bg-primary/10 p-2 flex-shrink-0">
+                                                                <Icon className="h-5 w-5 text-primary" />
+                                                            </div>
+                                                    <div className="flex-1 min-w-0">
+                                                            <CardTitle className="text-lg">
+                                                                {item.title}
+                                                            </CardTitle>
+                                                        <CardDescription className="mt-1">
+                                                            {item.description}
+                                                            {item.descriptionHighlight && (
+                                                                <span className="block mt-1 font-semibold text-primary">
+                                                                    {item.descriptionHighlight}
+                                                                </span>
+                                                            )}
+                                                        </CardDescription>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        toggleExpand(index);
+                                                    }}
+                                                    className="flex-shrink-0"
+                                                >
+                                                    {isExpanded ? (
+                                                        <ChevronUp className="h-4 w-4" />
+                                                    ) : (
+                                                        <ChevronDown className="h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                                    </CardHeader>
+                                        {isExpanded && (
+                                            <CardContent className="pt-0">
+                                                <p className="text-sm text-muted-foreground">
+                                                    {item.fullDescription}
+                                                </p>
+                                            </CardContent>
+                                                    )}
+                                                </Card>
+                                );
+
+                                if (item.href === '#') {
+                                    return (
+                                        <div key={item.title} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}>
+                                            <div className="opacity-60 cursor-not-allowed">
+                                                {cardContent}
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                if (item.href.startsWith('http')) {
+                                    return (
+                                        <a
+                                            key={item.title}
+                                            href={item.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block animate-fade-in-up"
+                                            style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
+                                        >
+                                            {cardContent}
+                                        </a>
+                                    );
+                                }
 
                                 return (
-                                    <div
-                                        key={item.title}
-                                        className={`relative flex items-center animate-fade-in-up ${
-                                            isEven ? 'md:justify-start' : 'md:justify-end'
-                                        }`}
-                                        style={{
-                                            animationDelay: `${index * 150}ms`,
-                                            animationFillMode: 'both',
-                                        }}
-                                    >
-                                        {/* Garis horizontal untuk menghubungkan ke garis vertikal */}
-                                        {!isLast && (
-                                            <div
-                                                className={`hidden md:block absolute top-1/2 h-0.5 bg-primary/30 -translate-y-1/2 -z-10 ${
-                                                    isEven
-                                                        ? 'left-1/2 right-0'
-                                                        : 'left-0 right-1/2'
-                                                }`}
-                                            ></div>
-                                        )}
-
-                                        {/* Nomor urut di tengah */}
-                                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold border-4 border-background shadow-md">
-                                            {index + 1}
-                                        </div>
-
-                                        {item.href === '#' ? (
-                                            <div className={`w-full md:w-80 ${
-                                                isEven ? 'md:mr-auto' : 'md:ml-auto'
-                                            }`}>
-                                                <Card className="w-full opacity-60 cursor-not-allowed relative animate-fade-in-up" style={{ animationDelay: `${index * 150 + 100}ms`, animationFillMode: 'both' }}>
-                                                    <CardHeader>
-                                                        <div className="mb-2 flex items-center gap-3">
-                                                            <div className="rounded-lg bg-primary/10 p-2">
-                                                                <Icon className="h-5 w-5 text-primary" />
-                                                            </div>
-                                                            <CardTitle className="text-lg">
-                                                                {item.title}
-                                                            </CardTitle>
-                                                        </div>
-                                                        <CardDescription>
-                                                            {item.description}
-                                                            {item.descriptionHighlight && (
-                                                                <span className="block mt-1 font-semibold text-primary">
-                                                                    {item.descriptionHighlight}
-                                                                </span>
-                                                            )}
-                                                        </CardDescription>
-                                                    </CardHeader>
-
-                                                    {/* Garis di bawah card untuk mobile */}
-                                                    {!isLast && (
-                                                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-primary/30 md:hidden"></div>
-                                                    )}
-                                                </Card>
-                                            </div>
-                                        ) : item.href.startsWith('http') || item.href.startsWith('/') ? (
-                                            <a
-                                                href={item.href}
-                                                target={item.href.startsWith('http') ? '_blank' : undefined}
-                                                rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                                                className={`w-full md:w-80 ${
-                                                    isEven ? 'md:mr-auto' : 'md:ml-auto'
-                                                }`}
-                                            >
-                                                <Card className="w-full transition-all hover:shadow-md hover:scale-[1.02] cursor-pointer relative animate-fade-in-up" style={{ animationDelay: `${index * 150 + 100}ms`, animationFillMode: 'both' }}>
-                                                    <CardHeader>
-                                                        <div className="mb-2 flex items-center gap-3">
-                                                            <div className="rounded-lg bg-primary/10 p-2">
-                                                                <Icon className="h-5 w-5 text-primary" />
-                                                            </div>
-                                                            <CardTitle className="text-lg">
-                                                                {item.title}
-                                                            </CardTitle>
-                                                        </div>
-                                                        <CardDescription>
-                                                            {item.description}
-                                                            {item.descriptionHighlight && (
-                                                                <span className="block mt-1 font-semibold text-primary">
-                                                                    {item.descriptionHighlight}
-                                                                </span>
-                                                            )}
-                                                        </CardDescription>
-                                                    </CardHeader>
-
-                                                    {/* Garis di bawah card untuk mobile */}
-                                                    {!isLast && (
-                                                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-primary/30 md:hidden"></div>
-                                                    )}
-                                                </Card>
-                                            </a>
-                                        ) : (
                                             <Link
+                                        key={item.title}
                                                 href={item.href}
-                                                className={`w-full md:w-80 ${
-                                                    isEven ? 'md:mr-auto' : 'md:ml-auto'
-                                                }`}
-                                            >
-                                                <Card className="w-full transition-all hover:shadow-md hover:scale-[1.02] cursor-pointer relative animate-fade-in-up" style={{ animationDelay: `${index * 150 + 100}ms`, animationFillMode: 'both' }}>
-                                                    <CardHeader>
-                                                        <div className="mb-2 flex items-center gap-3">
-                                                            <div className="rounded-lg bg-primary/10 p-2">
-                                                                <Icon className="h-5 w-5 text-primary" />
-                                                            </div>
-                                                            <CardTitle className="text-lg">
-                                                                {item.title}
-                                                            </CardTitle>
-                                                        </div>
-                                                        <CardDescription>
-                                                            {item.description}
-                                                            {item.descriptionHighlight && (
-                                                                <span className="block mt-1 font-semibold text-primary">
-                                                                    {item.descriptionHighlight}
-                                                                </span>
-                                                            )}
-                                                        </CardDescription>
-                                                    </CardHeader>
-
-                                                    {/* Garis di bawah card untuk mobile */}
-                                                    {!isLast && (
-                                                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-0.5 h-8 bg-primary/30 md:hidden"></div>
-                                                    )}
-                                                </Card>
+                                        className="block animate-fade-in-up"
+                                        style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
+                                    >
+                                        {cardContent}
                                             </Link>
-                                        )}
-                                    </div>
                                 );
                             })}
                         </div>

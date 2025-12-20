@@ -167,7 +167,7 @@ export default function KelolaInfografis({ infografisLink, infografis, success, 
                     <CardHeader>
                         <CardTitle>Link Google Drive Folder</CardTitle>
                         <CardDescription>
-                            Masukkan link Google Drive folder yang berisi file infografis (PNG, JPG). Sistem akan menampilkan semua file gambar di folder tersebut.
+                            Masukkan link Google Drive folder yang berisi file infografis. Sistem akan menampilkan semua file di folder tersebut.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -266,12 +266,24 @@ export default function KelolaInfografis({ infografisLink, infografis, success, 
                         ) : (
                             <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {infografisData.map((item) => (
+                                {infografisData.map((item) => {
+                                    const isPdf = item.mime_type === 'application/pdf';
+                                    return (
                                     <div
                                         key={item.id}
                                         className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                                     >
                                         <div className="aspect-video bg-muted relative">
+                                                {isPdf ? (
+                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
+                                                        <div className="text-center p-4">
+                                                            <svg className="w-16 h-16 mx-auto text-red-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                                                            </svg>
+                                                            <p className="text-xs text-muted-foreground font-medium">PDF</p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
                                             <img
                                                 src={`/infografis/${item.id}/image`}
                                                 alt={item.file_name}
@@ -280,13 +292,12 @@ export default function KelolaInfografis({ infografisLink, infografis, success, 
                                                 crossOrigin="anonymous"
                                                 referrerPolicy="no-referrer"
                                                 onError={(e) => {
-                                                    // Fallback: try using file_url if thumbnail fails
+                                                            // Hide image if proxy fails to avoid CORS issues
                                                     const target = e.target as HTMLImageElement;
-                                                    if (target.src !== item.file_url) {
-                                                        target.src = item.file_url;
-                                                    }
+                                                            target.style.display = 'none';
                                                 }}
                                             />
+                                                )}
                                         </div>
                                         <div className="p-3">
                                             <p className="text-sm font-medium truncate" title={item.file_name}>
@@ -299,7 +310,8 @@ export default function KelolaInfografis({ infografisLink, infografis, success, 
                                             )}
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Pagination */}
