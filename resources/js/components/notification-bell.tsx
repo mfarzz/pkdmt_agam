@@ -116,12 +116,22 @@ export function NotificationBell() {
                 credentials: 'same-origin',
             });
             if (response.ok) {
-                setNotifications(prev =>
-                    prev.map(n =>
-                        n.id === notificationId ? { ...n, is_read: true } : n
-                    )
-                );
-                setUnreadCount(prev => Math.max(0, prev - 1));
+                const data = await response.json();
+                if (data.success) {
+                    // Update local state
+                    setNotifications(prev =>
+                        prev.map(n =>
+                            n.id === notificationId ? { ...n, is_read: true } : n
+                        )
+                    );
+                    setUnreadCount(prev => Math.max(0, prev - 1));
+                    // Refresh notifications and count to ensure consistency
+                    await fetchNotifications();
+                    await fetchUnreadCount();
+                }
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Error marking notification as read:', errorData);
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -145,10 +155,20 @@ export function NotificationBell() {
                 credentials: 'same-origin',
             });
             if (response.ok) {
-                setNotifications(prev =>
-                    prev.map(n => ({ ...n, is_read: true }))
-                );
-                setUnreadCount(0);
+                const data = await response.json();
+                if (data.success) {
+                    // Update local state
+                    setNotifications(prev =>
+                        prev.map(n => ({ ...n, is_read: true }))
+                    );
+                    setUnreadCount(0);
+                    // Refresh notifications and count to ensure consistency
+                    await fetchNotifications();
+                    await fetchUnreadCount();
+                }
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Error marking all notifications as read:', errorData);
             }
         } catch (error) {
             console.error('Error marking all notifications as read:', error);

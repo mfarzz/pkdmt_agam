@@ -60,9 +60,23 @@ class NotificationController extends Controller
     /**
      * Mark notification as read.
      */
-    public function markAsRead(Request $request, Notification $notification): JsonResponse
+    public function markAsRead(Request $request, $notification): JsonResponse
     {
-        $notification->markAsRead();
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        
+        // Find notification by ID and ensure it belongs to the active disaster
+        $notificationModel = Notification::where('id', $notification)
+            ->where(function ($query) use ($disasterId) {
+                $query->where('disaster_id', $disasterId)
+                    ->orWhereNull('disaster_id');
+            })
+            ->first();
+
+        if (!$notificationModel) {
+            return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
+        }
+
+        $notificationModel->markAsRead();
 
         return response()->json(['success' => true]);
     }
