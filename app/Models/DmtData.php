@@ -55,7 +55,7 @@ class DmtData extends Model
     {
         return $this->belongsTo(Disaster::class);
     }
-
+    
     protected $casts = [
         'tanggal_kedatangan' => 'date',
         'tanggal_pelayanan_dimulai' => 'date',

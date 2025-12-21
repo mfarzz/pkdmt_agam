@@ -4,7 +4,10 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
-Route::get('/', function () {
+// Landing Page
+Route::get('/', [App\Http\Controllers\LandingPageController::class, 'index'])->name('landing');
+
+Route::get('/bencana', function () {
     // Get active disaster
     $activeDisaster = \App\Models\Disaster::where('is_active', true)->first();
     
@@ -21,7 +24,7 @@ Route::get('/', function () {
         'excelFile' => $excelFile,
         'activeDisasterName' => $activeDisaster ? $activeDisaster->name : null,
     ]);
-})->name('home');
+})->name('bencana');
 
 Route::get('/rekap', [App\Http\Controllers\RekapController::class, 'index'])->name('rekap');
 Route::get('/rekap/files', [App\Http\Controllers\RekapController::class, 'getReportFiles'])->name('rekap.files');
