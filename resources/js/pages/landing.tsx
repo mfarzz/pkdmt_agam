@@ -1,7 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent } from '@/components/ui/card';
-import { BookOpen, FileText, Users, Calendar, Image as ImageIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BookOpen, FileText, Users, Calendar, Image as ImageIcon, LogIn } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { login } from '@/routes';
 
 interface LandingProps {
     totalBencana?: number;
@@ -78,6 +80,16 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
         <>
             <Head title="Beranda - HEOC (Health Emergency Operation Center)" />
             <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex flex-col">
+                {/* Login Button - Top Right */}
+                <div className="absolute top-4 right-4 z-20">
+                    <Link href={login()}>
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+                            <LogIn className="h-4 w-4 mr-2" />
+                            Login
+                        </Button>
+                    </Link>
+                </div>
+
                 {/* Background Pattern */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-0 left-0 w-full h-full opacity-5">

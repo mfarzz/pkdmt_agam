@@ -10,7 +10,7 @@ import { Link } from '@inertiajs/react';
 import { Form, Head } from '@inertiajs/react';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
-import { home } from '@/routes';
+import { landing } from '@/routes';
 import { Lock, Mail, ArrowLeft } from 'lucide-react';
 
 interface LoginProps {
@@ -31,7 +31,7 @@ export default function Login({
                 {/* Header dengan tombol kembali */}
                 <div className="container mx-auto px-4 py-6">
                     <Link
-                        href={home()}
+                        href={landing()}
                         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <ArrowLeft className="h-4 w-4" />
