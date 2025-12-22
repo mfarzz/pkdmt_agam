@@ -10,18 +10,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Disaster } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2, AlertTriangle, Clock } from 'lucide-react';
 import { useState } from 'react';
 
 interface Props {
@@ -91,6 +84,17 @@ export default function KelolaBencana({ disasters, success, error }: Props) {
         }
     };
 
+    const formatDateTime = (dateString: string) => {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        }).format(date);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola Bencana" />
@@ -124,68 +128,138 @@ export default function KelolaBencana({ disasters, success, error }: Props) {
                     </div>
                 )}
 
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Nama Bencana</TableHead>
-                                <TableHead>Slug</TableHead>
-                                <TableHead>Deskripsi</TableHead>
-                                <TableHead className="w-[100px] text-center">Status</TableHead>
-                                <TableHead className="w-[100px] text-right">Aksi</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {disasters.map((disaster) => (
-                                <TableRow key={disaster.id}>
-                                    <TableCell className="font-medium">{disaster.name}</TableCell>
-                                    <TableCell>{disaster.slug}</TableCell>
-                                    <TableCell className="max-w-[300px] truncate" title={disaster.description || ''}>
-                                        {disaster.description || '-'}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        {disaster.is_active ? (
-                                            <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                                                Aktif
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
-                                                Nonaktif
-                                            </span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => handleEdit(disaster)}
-                                            >
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                                                onClick={() => handleDelete(disaster)}
-                                                disabled={disaster.is_active && disasters.length > 1}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {disasters.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
-                                        Belum ada data bencana.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                {/* List Disasters Table */}
+                {disasters && disasters.length > 0 ? (
+                    <Card>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-border">
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            No
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Nama Bencana
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Slug
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Deskripsi
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Status
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Mulai
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Selesai
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Aksi
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {disasters.map((disaster, index) => (
+                                        <tr
+                                            key={disaster.id}
+                                            className="hover:bg-muted/50 transition-colors"
+                                        >
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                                {index + 1}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                                                        <AlertTriangle className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-foreground">
+                                                        {disaster.name}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                                {disaster.slug}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground max-w-[300px]">
+                                                <span className="truncate block" title={disaster.description || ''}>
+                                                    {disaster.description || '-'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                {disaster.is_active ? (
+                                                    <span className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                                                        Aktif
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+                                                        Nonaktif
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                                                {disaster.started_at ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock className="h-3.5 w-3.5" />
+                                                        <span className="text-xs">
+                                                            {formatDateTime(disaster.started_at)}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground italic">-</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                                                {disaster.ended_at ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock className="h-3.5 w-3.5" />
+                                                        <span className="text-xs">
+                                                            {formatDateTime(disaster.ended_at)}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground italic">-</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleEdit(disaster)}
+                                                        className="h-8"
+                                                    >
+                                                        <Edit className="h-4 w-4 mr-2" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8"
+                                                        onClick={() => handleDelete(disaster)}
+                                                        disabled={disaster.is_active && disasters.length > 1}
+                                                    >
+                                                        <Trash2 className="h-4 w-4 mr-2" />
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                ) : (
+                    <Card>
+                        <CardContent className="flex flex-col items-center justify-center py-12">
+                            <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+                            <p className="text-sm text-muted-foreground">
+                                Belum ada data bencana. Tambah bencana baru untuk memulai.
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogContent className="sm:max-w-[500px]">

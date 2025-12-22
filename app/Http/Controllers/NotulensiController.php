@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\NotulensiDate;
+use App\Models\NotulensiImage;
 use App\Models\NotulensiLink;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -54,8 +56,37 @@ class NotulensiController extends Controller
             ];
         });
 
+        // Get all uploaded images grouped by date
+        $uploadedImages = NotulensiImage::where('disaster_id', $disasterId)
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->groupBy(function ($image) {
+                return $image->date->format('Y-m-d');
+            })
+            ->map(function ($images, $date) {
+                return [
+                    'date' => $date,
+                    'date_formatted' => \Carbon\Carbon::parse($date)->locale('id')->isoFormat('D MMMM YYYY'),
+                    'images' => $images->map(function ($image) {
+                        return [
+                            'id' => $image->id,
+                            'image_path' => Storage::url($image->image_path),
+                            'image_name' => $image->image_name,
+                            'description' => $image->description,
+                            'file_size' => $image->file_size,
+                            'mime_type' => $image->mime_type,
+                            'created_at' => $image->created_at->format('Y-m-d H:i:s'),
+                        ];
+                    })->toArray(),
+                    'count' => $images->count(),
+                ];
+            })
+            ->values();
+
         return Inertia::render('admin/kelola-notulensi', [
             'links' => $links,
+            'uploadedImages' => $uploadedImages,
             'success' => $request->session()->get('success'),
         ]);
     }
@@ -128,6 +159,90 @@ class NotulensiController extends Controller
         $notulensiLink->delete();
 
         return redirect()->route('kelola-notulensi')->with('success', 'Link notulensi berhasil dihapus.');
+    }
+
+    /**
+     * Upload notulensi images.
+     */
+    public function uploadImages(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'date' => ['required', 'date'],
+            'images' => ['required', 'array', 'min:1'],
+            'images.*' => ['required', 'image', 'max:5120'], // Max 5MB per image
+            'descriptions' => ['nullable', 'array'],
+            'descriptions.*' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        if (!$disasterId) {
+            return redirect()->route('kelola-notulensi')->with('error', 'Bencana aktif tidak ditemukan.');
+        }
+
+        $date = $validated['date'];
+        $images = $validated['images'];
+        $descriptions = $validated['descriptions'] ?? [];
+
+        try {
+            // Get the highest order for this date to continue numbering
+            $maxOrder = NotulensiImage::where('date', $date)
+                ->where('disaster_id', $disasterId)
+                ->max('order') ?? -1;
+
+            $uploadedCount = 0;
+            foreach ($images as $index => $image) {
+                if ($image && $image->isValid()) {
+                    // Generate unique filename
+                    $filename = 'notulensi_' . $disasterId . '_' . str_replace('-', '', $date) . '_' . time() . '_' . $index . '.' . $image->getClientOriginalExtension();
+                    
+                    // Store in public disk
+                    $path = $image->storeAs('notulensi/' . $disasterId . '/' . $date, $filename, 'public');
+                    
+                    if ($path) {
+                        NotulensiImage::create([
+                            'date' => $date,
+                            'disaster_id' => $disasterId,
+                            'image_path' => $path,
+                            'image_name' => $image->getClientOriginalName(),
+                            'description' => $descriptions[$index] ?? null,
+                            'file_size' => $image->getSize(),
+                            'mime_type' => $image->getMimeType(),
+                            'order' => ++$maxOrder,
+                        ]);
+                        $uploadedCount++;
+                    }
+                }
+            }
+
+            if ($uploadedCount > 0) {
+                return redirect()->route('kelola-notulensi')->with('success', "Berhasil mengunggah {$uploadedCount} gambar notulensi.");
+            } else {
+                return redirect()->route('kelola-notulensi')->with('error', 'Tidak ada gambar yang berhasil diunggah.');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to upload notulensi images: ' . $e->getMessage());
+            return redirect()->route('kelola-notulensi')->with('error', 'Gagal mengunggah gambar: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a notulensi image.
+     */
+    public function deleteImage(Request $request, NotulensiImage $notulensiImage): RedirectResponse
+    {
+        try {
+            // Delete file from storage
+            if (Storage::disk('public')->exists($notulensiImage->image_path)) {
+                Storage::disk('public')->delete($notulensiImage->image_path);
+            }
+            
+            $notulensiImage->delete();
+            
+            return redirect()->route('kelola-notulensi')->with('success', 'Gambar notulensi berhasil dihapus.');
+        } catch (\Exception $e) {
+            \Log::error('Failed to delete notulensi image: ' . $e->getMessage());
+            return redirect()->route('kelola-notulensi')->with('error', 'Gagal menghapus gambar: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -232,10 +347,9 @@ class NotulensiController extends Controller
             return $this->extractSheetId($link->gdrive_url);
         });
 
-        // Query all dates in this month
-        $notulensiDates = NotulensiDate::whereHas('notulensiLink', function($q) use ($activeDisaster) {
-                $q->where('disaster_id', $activeDisaster->id);
-            })
+        // Query all spreadsheet notulensi dates in this month
+        $notulensiDates = NotulensiDate::where('disaster_id', $activeDisaster->id)
+            ->where('type', 'spreadsheet')
             ->whereBetween('date', [$startDate, $endDate])
             ->get()
             ->map(function ($notulensiDate) use ($isAuthenticated, $links) {
@@ -254,6 +368,7 @@ class NotulensiController extends Controller
                 
                 return [
                     'date' => $notulensiDate->date->format('Y-m-d'),
+                    'type' => 'spreadsheet',
                     'sheet_id' => $notulensiDate->sheet_id,
                     'sheet_link' => $sheetLink,
                     'tab_name' => $notulensiDate->tab_name,
@@ -261,18 +376,52 @@ class NotulensiController extends Controller
                 ];
             });
 
-        // Organize by date - now supports multiple notulensi per date
+        // Query all image notulensi in this month
+        $notulensiImages = NotulensiImage::where('disaster_id', $activeDisaster->id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->orderBy('date')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->groupBy(function ($image) {
+                return $image->date->format('Y-m-d');
+            });
+
+        // Organize by date - combine spreadsheet and images
         $result = [];
+        
+        // Add spreadsheet notulensi
         foreach ($notulensiDates as $notulensiDate) {
             $date = $notulensiDate['date'];
             if (!isset($result[$date])) {
                 $result[$date] = [];
             }
             $result[$date][] = [
+                'type' => 'spreadsheet',
                 'sheet_id' => $notulensiDate['sheet_id'],
                 'sheet_link' => $notulensiDate['sheet_link'],
                 'tab_name' => $notulensiDate['tab_name'],
                 'link_title' => $notulensiDate['link_title'],
+            ];
+        }
+        
+        // Add image notulensi
+        foreach ($notulensiImages as $dateStr => $images) {
+            if (!isset($result[$dateStr])) {
+                $result[$dateStr] = [];
+            }
+            $result[$dateStr][] = [
+                'type' => 'image',
+                'images' => $images->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'image_path' => Storage::url($image->image_path),
+                        'image_name' => $image->image_name,
+                        'description' => $image->description,
+                        'file_size' => $image->file_size,
+                        'mime_type' => $image->mime_type,
+                    ];
+                })->toArray(),
+                'count' => $images->count(),
             ];
         }
 
@@ -323,12 +472,15 @@ class NotulensiController extends Controller
                     [
                         'date' => $date,
                         'sheet_id' => $latestSheetId,
+                        'type' => 'spreadsheet',
                     ],
                     [
                         'notulensi_link_id' => $linkId,
+                        'type' => 'spreadsheet',
                         'tab_name' => $sheet['title'],
                         'tab_id' => $sheet['sheetId'],
                         'sheet_link' => $sheetLink,
+                        'disaster_id' => $link->disaster_id,
                     ]
                 );
             }

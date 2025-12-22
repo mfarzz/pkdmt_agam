@@ -1,6 +1,4 @@
-import AppNavbar from '@/components/app-navbar';
-import AppFooter from '@/components/app-footer';
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, useForm, usePage, router, Link } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -520,30 +518,31 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
     // Calculate progress percentage
     const progressPercentage = (currentStep / totalSteps) * 100;
 
-    const navItems = [
-        { name: 'Beranda', link: '/' },
-        { name: 'Informasi', link: '/informasi' },
+    const partners = [
+        { name: 'Pemkab Agam', image: '/image/Logo_Agam_Regency.png' },
+        { name: 'Universitas Andalas', image: '/image/Logo_Unand.png' },
+        { name: 'Universitas Brawijaya', image: '/image/Logo_Universitas_Brawijaya.png' },
+        { name: 'RS Khusus Kanker', image: '/image/RSKKA.png' },
+        { name: 'Dinas Kesehatan', image: '/image/DKK.png' },
     ];
 
     return (
         <>
             <Head title="Pendaftaran DMT - PKDMT" />
             <div className="min-h-screen bg-background flex flex-col">
-                <AppNavbar navItems={navItems} />
-
-                <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 pt-24 flex-1">
+                <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 flex-1">
                     <div className="max-w-4xl mx-auto">
                         <div className="mb-6">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={() => window.location.href = '/'}
-                                className="flex items-center gap-2"
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                                <span className="hidden sm:inline">Kembali ke Beranda</span>
-                                <span className="sm:hidden">Kembali</span>
-                            </Button>
+                            <Link href="/">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="flex items-center gap-2"
+                                >
+                                    <ArrowLeft className="h-4 w-4" />
+                                    <span>Kembali ke Beranda</span>
+                                </Button>
+                            </Link>
                         </div>
                         <div className="mb-8 text-center">
                             <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -583,18 +582,16 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                     return (
                                         <div
                                             key={step.id}
-                                            className={`flex flex-col items-center gap-1 ${
-                                                isActive ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
-                                            }`}
+                                            className={`flex flex-col items-center gap-1 ${isActive ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
+                                                }`}
                                         >
                                             <div
-                                                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
-                                                    isActive
+                                                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${isActive
                                                         ? 'border-primary bg-primary text-primary-foreground'
                                                         : isCompleted
-                                                        ? 'border-green-600 bg-green-600 text-white'
-                                                        : 'border-muted-foreground bg-background'
-                                                }`}
+                                                            ? 'border-green-600 bg-green-600 text-white'
+                                                            : 'border-muted-foreground bg-background'
+                                                    }`}
                                             >
                                                 <StepIcon className="h-5 w-5" />
                                             </div>
@@ -610,824 +607,824 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Step 1: Data Rincian Tim */}
                             {currentStep === 1 && (
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <Users className="h-5 w-5 text-primary" />
-                                        <CardTitle>Data Rincian Tim (DMT)</CardTitle>
-                                    </div>
-                                    <CardDescription>
-                                        Informasi dasar tentang tim Disaster Medical Team
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="nama_dmt">
-                                            Nama Disaster Medical Team (DMT) <span className="text-red-500">*</span>
-                                        </Label>
-                                        <Input
-                                            id="nama_dmt"
-                                            value={data.nama_dmt}
-                                            onChange={(e) => setData('nama_dmt', e.target.value)}
-                                            required
-                                            placeholder="Contoh: Tim DMT RS ABC"
-                                        />
-                                        <InputError message={errors.nama_dmt} />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="nama_ketua_tim">
-                                            Nama Ketua Tim <span className="text-red-500">*</span>
-                                        </Label>
-                                        <Input
-                                            id="nama_ketua_tim"
-                                            value={data.nama_ketua_tim}
-                                            onChange={(e) => setData('nama_ketua_tim', e.target.value)}
-                                            required
-                                        />
-                                        <InputError message={errors.nama_ketua_tim} />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex items-center gap-2">
+                                            <Users className="h-5 w-5 text-primary" />
+                                            <CardTitle>Data Rincian Tim (DMT)</CardTitle>
+                                        </div>
+                                        <CardDescription>
+                                            Informasi dasar tentang tim Disaster Medical Team
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="tanggal_kedatangan">
-                                                Tanggal Kedatangan <span className="text-red-500">*</span>
+                                            <Label htmlFor="nama_dmt">
+                                                Nama Disaster Medical Team (DMT) <span className="text-red-500">*</span>
                                             </Label>
                                             <Input
-                                                id="tanggal_kedatangan"
-                                                type="date"
-                                                value={data.tanggal_kedatangan}
-                                                onChange={(e) => setData('tanggal_kedatangan', e.target.value)}
+                                                id="nama_dmt"
+                                                value={data.nama_dmt}
+                                                onChange={(e) => setData('nama_dmt', e.target.value)}
+                                                required
+                                                placeholder="Contoh: Tim DMT RS ABC"
+                                            />
+                                            <InputError message={errors.nama_dmt} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="nama_ketua_tim">
+                                                Nama Ketua Tim <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Input
+                                                id="nama_ketua_tim"
+                                                value={data.nama_ketua_tim}
+                                                onChange={(e) => setData('nama_ketua_tim', e.target.value)}
                                                 required
                                             />
-                                            <InputError message={errors.tanggal_kedatangan} />
+                                            <InputError message={errors.nama_ketua_tim} />
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="masa_penugasan_hari">
-                                                Masa Penugasan (hari) <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="masa_penugasan_hari"
-                                                type="number"
-                                                min="1"
-                                                value={data.masa_penugasan_hari}
-                                                onChange={(e) => setData('masa_penugasan_hari', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.masa_penugasan_hari} />
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="tanggal_kedatangan">
+                                                    Tanggal Kedatangan <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="tanggal_kedatangan"
+                                                    type="date"
+                                                    value={data.tanggal_kedatangan}
+                                                    onChange={(e) => setData('tanggal_kedatangan', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.tanggal_kedatangan} />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="masa_penugasan_hari">
+                                                    Masa Penugasan (hari) <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="masa_penugasan_hari"
+                                                    type="number"
+                                                    min="1"
+                                                    value={data.masa_penugasan_hari}
+                                                    onChange={(e) => setData('masa_penugasan_hari', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.masa_penugasan_hari} />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="tanggal_pelayanan_dimulai">
+                                                    Tanggal Pelayanan Dimulai <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="tanggal_pelayanan_dimulai"
+                                                    type="date"
+                                                    value={data.tanggal_pelayanan_dimulai}
+                                                    onChange={(e) => setData('tanggal_pelayanan_dimulai', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.tanggal_pelayanan_dimulai} />
+                                            </div>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="tanggal_pelayanan_dimulai">
-                                                Tanggal Pelayanan Dimulai <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="tanggal_pelayanan_dimulai"
-                                                type="date"
-                                                value={data.tanggal_pelayanan_dimulai}
-                                                onChange={(e) => setData('tanggal_pelayanan_dimulai', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.tanggal_pelayanan_dimulai} />
-                                        </div>
-                                    </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="tanggal_pelayanan_diakhiri">
+                                                    Tanggal Pelayanan Diakhiri
+                                                </Label>
+                                                <Input
+                                                    id="tanggal_pelayanan_diakhiri"
+                                                    type="date"
+                                                    value={data.tanggal_pelayanan_diakhiri}
+                                                    onChange={(e) => setData('tanggal_pelayanan_diakhiri', e.target.value)}
+                                                    min={data.tanggal_pelayanan_dimulai}
+                                                />
+                                                <InputError message={errors.tanggal_pelayanan_diakhiri} />
+                                            </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="tanggal_pelayanan_diakhiri">
-                                                Tanggal Pelayanan Diakhiri
-                                            </Label>
-                                            <Input
-                                                id="tanggal_pelayanan_diakhiri"
-                                                type="date"
-                                                value={data.tanggal_pelayanan_diakhiri}
-                                                onChange={(e) => setData('tanggal_pelayanan_diakhiri', e.target.value)}
-                                                min={data.tanggal_pelayanan_dimulai}
-                                            />
-                                            <InputError message={errors.tanggal_pelayanan_diakhiri} />
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rencana_tanggal_kepulangan">
+                                                    Rencana Tanggal Kepulangan
+                                                </Label>
+                                                <Input
+                                                    id="rencana_tanggal_kepulangan"
+                                                    type="date"
+                                                    value={data.rencana_tanggal_kepulangan}
+                                                    onChange={(e) => setData('rencana_tanggal_kepulangan', e.target.value)}
+                                                />
+                                                <InputError message={errors.rencana_tanggal_kepulangan} />
+                                            </div>
                                         </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="rencana_tanggal_kepulangan">
-                                                Rencana Tanggal Kepulangan
-                                            </Label>
-                                            <Input
-                                                id="rencana_tanggal_kepulangan"
-                                                type="date"
-                                                value={data.rencana_tanggal_kepulangan}
-                                                onChange={(e) => setData('rencana_tanggal_kepulangan', e.target.value)}
-                                            />
-                                            <InputError message={errors.rencana_tanggal_kepulangan} />
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
                             )}
 
                             {/* Step 2: Nara Hubung */}
                             {currentStep === 2 && (
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <FileText className="h-5 w-5 text-primary" />
-                                        <CardTitle>Nara Hubung Paska Kepulangan</CardTitle>
-                                    </div>
-                                    <CardDescription>
-                                        Kontak person yang dapat dihubungi setelah tim kembali
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="nama_nara_hubung">
-                                                Nama Nara Hubung <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="nama_nara_hubung"
-                                                value={data.nama_nara_hubung}
-                                                onChange={(e) => setData('nama_nara_hubung', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.nama_nara_hubung} />
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex items-center gap-2">
+                                            <FileText className="h-5 w-5 text-primary" />
+                                            <CardTitle>Nara Hubung Paska Kepulangan</CardTitle>
+                                        </div>
+                                        <CardDescription>
+                                            Kontak person yang dapat dihubungi setelah tim kembali
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="nama_nara_hubung">
+                                                    Nama Nara Hubung <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="nama_nara_hubung"
+                                                    value={data.nama_nara_hubung}
+                                                    onChange={(e) => setData('nama_nara_hubung', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.nama_nara_hubung} />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="posisi_jabatan">
+                                                    Posisi / Jabatan <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="posisi_jabatan"
+                                                    value={data.posisi_jabatan}
+                                                    onChange={(e) => setData('posisi_jabatan', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.posisi_jabatan} />
+                                            </div>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="posisi_jabatan">
-                                                Posisi / Jabatan <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="posisi_jabatan"
-                                                value={data.posisi_jabatan}
-                                                onChange={(e) => setData('posisi_jabatan', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.posisi_jabatan} />
-                                        </div>
-                                    </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="email">
+                                                    Alamat Email <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="email"
+                                                    type="email"
+                                                    value={data.email}
+                                                    onChange={(e) => setData('email', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.email} />
+                                            </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email">
-                                                Alamat Email <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="email"
-                                                type="email"
-                                                value={data.email}
-                                                onChange={(e) => setData('email', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.email} />
+                                            <div className="space-y-2">
+                                                <Label htmlFor="nomor_hp">
+                                                    Nomor HP / WhatsApp <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="nomor_hp"
+                                                    type="tel"
+                                                    value={data.nomor_hp}
+                                                    onChange={(e) => setData('nomor_hp', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.nomor_hp} />
+                                            </div>
                                         </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="nomor_hp">
-                                                Nomor HP / WhatsApp <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="nomor_hp"
-                                                type="tel"
-                                                value={data.nomor_hp}
-                                                onChange={(e) => setData('nomor_hp', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.nomor_hp} />
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
                             )}
 
                             {/* Step 3: Kapasitas Logistik Tim */}
                             {currentStep === 3 && (
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <Package className="h-5 w-5 text-primary" />
-                                        <CardTitle>Kapasitas Logistik Tim</CardTitle>
-                                    </div>
-                                    <CardDescription>
-                                        Informasi tentang logistik yang dibawa tim
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="logistik_non_medis">
-                                            Logistik Non Medis <span className="text-red-500">*</span>
-                                        </Label>
-                                        <Textarea
-                                            id="logistik_non_medis"
-                                            value={data.logistik_non_medis}
-                                            onChange={(e) => setData('logistik_non_medis', e.target.value)}
-                                            required
-                                            placeholder="Contoh: tenda 10 unit, genset 3 unit, penjernih air 15 unit, laptop 4 unit, HT 3 unit. Jika sudah ada dokumen logistik, upload dokumen dan tuliskan 'terlampir' di bagian ini."
-                                            rows={4}
-                                        />
-                                        <InputError message={errors.logistik_non_medis} />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="logistik_non_medis_files">
-                                            Upload Dokumen Logistik Non Medis
-                                        </Label>
+                                <Card>
+                                    <CardHeader>
                                         <div className="flex items-center gap-2">
-                                            <Input
-                                                ref={logistikNonMedisInputRef}
-                                                id="logistik_non_medis_files"
-                                                type="file"
-                                                multiple
-                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                                onChange={(e) => handleFileChange('logistik_non_medis_files', e.target.files)}
-                                                className="hidden"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => logistikNonMedisInputRef.current?.click()}
-                                            >
-                                                Pilih File
-                                            </Button>
+                                            <Package className="h-5 w-5 text-primary" />
+                                            <CardTitle>Kapasitas Logistik Tim</CardTitle>
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Upload maksimum 5 file. Maks 5 MB per file.
-                                        </p>
-                                        {data.logistik_non_medis_files.length > 0 && (
-                                            <div className="mt-3 space-y-2">
-                                                <p className="text-sm font-medium text-foreground">
-                                                    File yang dipilih ({data.logistik_non_medis_files.length}/5):
-                                                </p>
-                                                <div className="space-y-2">
-                                                    {data.logistik_non_medis_files.map((file, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center justify-between p-2 bg-muted rounded-md border border-border"
-                                                        >
-                                                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-sm font-medium text-foreground truncate">
-                                                                        {file.name}
-                                                                    </p>
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        {formatFileSize(file.size)}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-                                                                onClick={() => handleRemoveFile('logistik_non_medis_files', index)}
-                                                            >
-                                                                <X className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                        <InputError message={errors.logistik_non_medis_files} />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="logistik_medis">
-                                            Logistik Medis <span className="text-red-500">*</span>
-                                        </Label>
-                                        <Textarea
-                                            id="logistik_medis"
-                                            value={data.logistik_medis}
-                                            onChange={(e) => setData('logistik_medis', e.target.value)}
-                                            required
-                                            placeholder="Jika sudah ada dokumen logistik, upload dokumen dan tuliskan 'terlampir' di bagian ini."
-                                            rows={4}
-                                        />
-                                        <InputError message={errors.logistik_medis} />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="logistik_medis_files">
-                                            Upload Dokumen Logistik Medis
-                                        </Label>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                ref={logistikMedisInputRef}
-                                                id="logistik_medis_files"
-                                                type="file"
-                                                multiple
-                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                                onChange={(e) => handleFileChange('logistik_medis_files', e.target.files)}
-                                                className="hidden"
+                                        <CardDescription>
+                                            Informasi tentang logistik yang dibawa tim
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="logistik_non_medis">
+                                                Logistik Non Medis <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Textarea
+                                                id="logistik_non_medis"
+                                                value={data.logistik_non_medis}
+                                                onChange={(e) => setData('logistik_non_medis', e.target.value)}
+                                                required
+                                                placeholder="Contoh: tenda 10 unit, genset 3 unit, penjernih air 15 unit, laptop 4 unit, HT 3 unit. Jika sudah ada dokumen logistik, upload dokumen dan tuliskan 'terlampir' di bagian ini."
+                                                rows={4}
                                             />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => logistikMedisInputRef.current?.click()}
-                                            >
-                                                Pilih File
-                                            </Button>
+                                            <InputError message={errors.logistik_non_medis} />
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Upload maksimum 5 file. Maks 5 MB per file.
-                                        </p>
-                                        {data.logistik_medis_files.length > 0 && (
-                                            <div className="mt-3 space-y-2">
-                                                <p className="text-sm font-medium text-foreground">
-                                                    File yang dipilih ({data.logistik_medis_files.length}/5):
-                                                </p>
-                                                <div className="space-y-2">
-                                                    {data.logistik_medis_files.map((file, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center justify-between p-2 bg-muted rounded-md border border-border"
-                                                        >
-                                                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-sm font-medium text-foreground truncate">
-                                                                        {file.name}
-                                                                    </p>
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        {formatFileSize(file.size)}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-                                                                onClick={() => handleRemoveFile('logistik_medis_files', index)}
-                                                            >
-                                                                <X className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    ))}
-                                                </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="logistik_non_medis_files">
+                                                Upload Dokumen Logistik Non Medis
+                                            </Label>
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    ref={logistikNonMedisInputRef}
+                                                    id="logistik_non_medis_files"
+                                                    type="file"
+                                                    multiple
+                                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                                    onChange={(e) => handleFileChange('logistik_non_medis_files', e.target.files)}
+                                                    className="hidden"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => logistikNonMedisInputRef.current?.click()}
+                                                >
+                                                    Pilih File
+                                                </Button>
                                             </div>
-                                        )}
-                                        <InputError message={errors.logistik_medis_files} />
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                            <p className="text-xs text-muted-foreground">
+                                                Upload maksimum 5 file. Maks 5 MB per file.
+                                            </p>
+                                            {data.logistik_non_medis_files.length > 0 && (
+                                                <div className="mt-3 space-y-2">
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        File yang dipilih ({data.logistik_non_medis_files.length}/5):
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        {data.logistik_non_medis_files.map((file, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="flex items-center justify-between p-2 bg-muted rounded-md border border-border"
+                                                            >
+                                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                    <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-sm font-medium text-foreground truncate">
+                                                                            {file.name}
+                                                                        </p>
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            {formatFileSize(file.size)}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                                                                    onClick={() => handleRemoveFile('logistik_non_medis_files', index)}
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <InputError message={errors.logistik_non_medis_files} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="logistik_medis">
+                                                Logistik Medis <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Textarea
+                                                id="logistik_medis"
+                                                value={data.logistik_medis}
+                                                onChange={(e) => setData('logistik_medis', e.target.value)}
+                                                required
+                                                placeholder="Jika sudah ada dokumen logistik, upload dokumen dan tuliskan 'terlampir' di bagian ini."
+                                                rows={4}
+                                            />
+                                            <InputError message={errors.logistik_medis} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="logistik_medis_files">
+                                                Upload Dokumen Logistik Medis
+                                            </Label>
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    ref={logistikMedisInputRef}
+                                                    id="logistik_medis_files"
+                                                    type="file"
+                                                    multiple
+                                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                                    onChange={(e) => handleFileChange('logistik_medis_files', e.target.files)}
+                                                    className="hidden"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => logistikMedisInputRef.current?.click()}
+                                                >
+                                                    Pilih File
+                                                </Button>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Upload maksimum 5 file. Maks 5 MB per file.
+                                            </p>
+                                            {data.logistik_medis_files.length > 0 && (
+                                                <div className="mt-3 space-y-2">
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        File yang dipilih ({data.logistik_medis_files.length}/5):
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        {data.logistik_medis_files.map((file, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="flex items-center justify-between p-2 bg-muted rounded-md border border-border"
+                                                            >
+                                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                    <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-sm font-medium text-foreground truncate">
+                                                                            {file.name}
+                                                                        </p>
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            {formatFileSize(file.size)}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                                                                    onClick={() => handleRemoveFile('logistik_medis_files', index)}
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <InputError message={errors.logistik_medis_files} />
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             )}
 
                             {/* Step 4: Kapasitas Layanan */}
                             {currentStep === 4 && (
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <Activity className="h-5 w-5 text-primary" />
-                                        <CardTitle>Kapasitas Layanan</CardTitle>
-                                    </div>
-                                    <CardDescription>
-                                        Informasi tentang kapasitas layanan yang dapat diberikan tim
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="kapasitas_rawat_jalan">
-                                                Kapasitas Rawat Jalan (pasien/hari) <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="kapasitas_rawat_jalan"
-                                                type="number"
-                                                min="0"
-                                                value={data.kapasitas_rawat_jalan}
-                                                onChange={(e) => setData('kapasitas_rawat_jalan', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.kapasitas_rawat_jalan} />
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex items-center gap-2">
+                                            <Activity className="h-5 w-5 text-primary" />
+                                            <CardTitle>Kapasitas Layanan</CardTitle>
+                                        </div>
+                                        <CardDescription>
+                                            Informasi tentang kapasitas layanan yang dapat diberikan tim
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="kapasitas_rawat_jalan">
+                                                    Kapasitas Rawat Jalan (pasien/hari) <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="kapasitas_rawat_jalan"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.kapasitas_rawat_jalan}
+                                                    onChange={(e) => setData('kapasitas_rawat_jalan', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.kapasitas_rawat_jalan} />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="kapasitas_rawat_inap">
+                                                    Kapasitas Rawat Inap (pasien/hari) <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="kapasitas_rawat_inap"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.kapasitas_rawat_inap}
+                                                    onChange={(e) => setData('kapasitas_rawat_inap', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.kapasitas_rawat_inap} />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="kapasitas_operasi_bedah_mayor">
+                                                    Kapasitas Operasi Bedah Mayor (kasus/hari) <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="kapasitas_operasi_bedah_mayor"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.kapasitas_operasi_bedah_mayor}
+                                                    onChange={(e) => setData('kapasitas_operasi_bedah_mayor', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.kapasitas_operasi_bedah_mayor} />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="kapasitas_operasi_bedah_minor">
+                                                    Kapasitas Operasi Bedah Minor (kasus/hari) <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="kapasitas_operasi_bedah_minor"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.kapasitas_operasi_bedah_minor}
+                                                    onChange={(e) => setData('kapasitas_operasi_bedah_minor', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.kapasitas_operasi_bedah_minor} />
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="kapasitas_rawat_inap">
-                                                Kapasitas Rawat Inap (pasien/hari) <span className="text-red-500">*</span>
+                                            <Label>
+                                                Jenis Layanan yang Tersedia (Pilih semua yang berlaku) <span className="text-red-500">*</span>
                                             </Label>
-                                            <Input
-                                                id="kapasitas_rawat_inap"
-                                                type="number"
-                                                min="0"
-                                                value={data.kapasitas_rawat_inap}
-                                                onChange={(e) => setData('kapasitas_rawat_inap', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.kapasitas_rawat_inap} />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                                                {jenisLayananOptions.map((layanan) => (
+                                                    <div key={layanan} className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`layanan-${layanan}`}
+                                                            checked={selectedLayanan.includes(layanan)}
+                                                            onCheckedChange={(checked) => handleLayananChange(layanan, checked as boolean)}
+                                                        />
+                                                        <Label
+                                                            htmlFor={`layanan-${layanan}`}
+                                                            className="font-normal cursor-pointer"
+                                                        >
+                                                            {layanan}
+                                                        </Label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <InputError message={errors.jenis_layanan_tersedia} />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="kapasitas_operasi_bedah_mayor">
-                                                Kapasitas Operasi Bedah Mayor (kasus/hari) <span className="text-red-500">*</span>
+                                            <Label htmlFor="jenis_layanan_lainnya">
+                                                Yang lain:
                                             </Label>
                                             <Input
-                                                id="kapasitas_operasi_bedah_mayor"
-                                                type="number"
-                                                min="0"
-                                                value={data.kapasitas_operasi_bedah_mayor}
-                                                onChange={(e) => setData('kapasitas_operasi_bedah_mayor', e.target.value)}
-                                                required
+                                                id="jenis_layanan_lainnya"
+                                                value={data.jenis_layanan_lainnya}
+                                                onChange={(e) => setData('jenis_layanan_lainnya', e.target.value)}
+                                                placeholder="Tuliskan jenis layanan lainnya jika ada"
                                             />
-                                            <InputError message={errors.kapasitas_operasi_bedah_mayor} />
+                                            <InputError message={errors.jenis_layanan_lainnya} />
                                         </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="kapasitas_operasi_bedah_minor">
-                                                Kapasitas Operasi Bedah Minor (kasus/hari) <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="kapasitas_operasi_bedah_minor"
-                                                type="number"
-                                                min="0"
-                                                value={data.kapasitas_operasi_bedah_minor}
-                                                onChange={(e) => setData('kapasitas_operasi_bedah_minor', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.kapasitas_operasi_bedah_minor} />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label>
-                                            Jenis Layanan yang Tersedia (Pilih semua yang berlaku) <span className="text-red-500">*</span>
-                                        </Label>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                                            {jenisLayananOptions.map((layanan) => (
-                                                <div key={layanan} className="flex items-center space-x-2">
-                                                    <Checkbox
-                                                        id={`layanan-${layanan}`}
-                                                        checked={selectedLayanan.includes(layanan)}
-                                                        onCheckedChange={(checked) => handleLayananChange(layanan, checked as boolean)}
-                                                    />
-                                                    <Label
-                                                        htmlFor={`layanan-${layanan}`}
-                                                        className="font-normal cursor-pointer"
-                                                    >
-                                                        {layanan}
-                                                    </Label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <InputError message={errors.jenis_layanan_tersedia} />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="jenis_layanan_lainnya">
-                                            Yang lain:
-                                        </Label>
-                                        <Input
-                                            id="jenis_layanan_lainnya"
-                                            value={data.jenis_layanan_lainnya}
-                                            onChange={(e) => setData('jenis_layanan_lainnya', e.target.value)}
-                                            placeholder="Tuliskan jenis layanan lainnya jika ada"
-                                        />
-                                        <InputError message={errors.jenis_layanan_lainnya} />
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
                             )}
 
                             {/* Step 5: Komposisi Anggota Tim */}
                             {currentStep === 5 && (
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <Stethoscope className="h-5 w-5 text-primary" />
-                                        <CardTitle>Komposisi Anggota Tim</CardTitle>
-                                    </div>
-                                    <CardDescription>
-                                        Jumlah dan rincian anggota tim medis
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="jumlah_dokter_umum">
-                                                Jumlah Dokter Umum <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="jumlah_dokter_umum"
-                                                type="number"
-                                                min="0"
-                                                value={data.jumlah_dokter_umum}
-                                                onChange={(e) => setData('jumlah_dokter_umum', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.jumlah_dokter_umum} />
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex items-center gap-2">
+                                            <Stethoscope className="h-5 w-5 text-primary" />
+                                            <CardTitle>Komposisi Anggota Tim</CardTitle>
                                         </div>
+                                        <CardDescription>
+                                            Jumlah dan rincian anggota tim medis
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_dokter_umum">
+                                                    Jumlah Dokter Umum <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_dokter_umum"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.jumlah_dokter_umum}
+                                                    onChange={(e) => setData('jumlah_dokter_umum', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.jumlah_dokter_umum} />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="rincian_dokter_spesialis">
-                                                Rincian Dokter Spesialis <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="rincian_dokter_spesialis"
-                                                value={data.rincian_dokter_spesialis}
-                                                onChange={(e) => setData('rincian_dokter_spesialis', e.target.value)}
-                                                required
-                                                placeholder="Contoh: Bedah - 1, Anak - 1, Anestesi - 2"
-                                            />
-                                            <InputError message={errors.rincian_dokter_spesialis} />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rincian_dokter_spesialis">
+                                                    Rincian Dokter Spesialis <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="rincian_dokter_spesialis"
+                                                    value={data.rincian_dokter_spesialis}
+                                                    onChange={(e) => setData('rincian_dokter_spesialis', e.target.value)}
+                                                    required
+                                                    placeholder="Contoh: Bedah - 1, Anak - 1, Anestesi - 2"
+                                                />
+                                                <InputError message={errors.rincian_dokter_spesialis} />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="jumlah_perawat">
-                                                Jumlah Perawat <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="jumlah_perawat"
-                                                type="number"
-                                                min="0"
-                                                value={data.jumlah_perawat}
-                                                onChange={(e) => setData('jumlah_perawat', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.jumlah_perawat} />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_perawat">
+                                                    Jumlah Perawat <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_perawat"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.jumlah_perawat}
+                                                    onChange={(e) => setData('jumlah_perawat', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.jumlah_perawat} />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="jumlah_bidan">
-                                                Jumlah Bidan <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="jumlah_bidan"
-                                                type="number"
-                                                min="0"
-                                                value={data.jumlah_bidan}
-                                                onChange={(e) => setData('jumlah_bidan', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.jumlah_bidan} />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_bidan">
+                                                    Jumlah Bidan <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_bidan"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.jumlah_bidan}
+                                                    onChange={(e) => setData('jumlah_bidan', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.jumlah_bidan} />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="jumlah_apoteker">
-                                                Jumlah Apoteker / Asisten Apoteker <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="jumlah_apoteker"
-                                                type="number"
-                                                min="0"
-                                                value={data.jumlah_apoteker}
-                                                onChange={(e) => setData('jumlah_apoteker', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.jumlah_apoteker} />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_apoteker">
+                                                    Jumlah Apoteker / Asisten Apoteker <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_apoteker"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.jumlah_apoteker}
+                                                    onChange={(e) => setData('jumlah_apoteker', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.jumlah_apoteker} />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="jumlah_psikolog">
-                                                Jumlah Psikolog <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="jumlah_psikolog"
-                                                type="number"
-                                                min="0"
-                                                value={data.jumlah_psikolog}
-                                                onChange={(e) => setData('jumlah_psikolog', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.jumlah_psikolog} />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_psikolog">
+                                                    Jumlah Psikolog <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_psikolog"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.jumlah_psikolog}
+                                                    onChange={(e) => setData('jumlah_psikolog', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.jumlah_psikolog} />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="jumlah_staf_logistik">
-                                                Jumlah Staf Logistik <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="jumlah_staf_logistik"
-                                                type="number"
-                                                min="0"
-                                                value={data.jumlah_staf_logistik}
-                                                onChange={(e) => setData('jumlah_staf_logistik', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.jumlah_staf_logistik} />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_staf_logistik">
+                                                    Jumlah Staf Logistik <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_staf_logistik"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.jumlah_staf_logistik}
+                                                    onChange={(e) => setData('jumlah_staf_logistik', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.jumlah_staf_logistik} />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="jumlah_staf_administrasi">
-                                                Jumlah Staf Administrasi <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="jumlah_staf_administrasi"
-                                                type="number"
-                                                min="0"
-                                                value={data.jumlah_staf_administrasi}
-                                                onChange={(e) => setData('jumlah_staf_administrasi', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.jumlah_staf_administrasi} />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_staf_administrasi">
+                                                    Jumlah Staf Administrasi <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_staf_administrasi"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.jumlah_staf_administrasi}
+                                                    onChange={(e) => setData('jumlah_staf_administrasi', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.jumlah_staf_administrasi} />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="jumlah_petugas_keamanan">
-                                                Jumlah Petugas Keamanan (Security) <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="jumlah_petugas_keamanan"
-                                                type="number"
-                                                min="0"
-                                                value={data.jumlah_petugas_keamanan}
-                                                onChange={(e) => setData('jumlah_petugas_keamanan', e.target.value)}
-                                                required
-                                            />
-                                            <InputError message={errors.jumlah_petugas_keamanan} />
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jumlah_petugas_keamanan">
+                                                    Jumlah Petugas Keamanan (Security) <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="jumlah_petugas_keamanan"
+                                                    type="number"
+                                                    min="0"
+                                                    value={data.jumlah_petugas_keamanan}
+                                                    onChange={(e) => setData('jumlah_petugas_keamanan', e.target.value)}
+                                                    required
+                                                />
+                                                <InputError message={errors.jumlah_petugas_keamanan} />
+                                            </div>
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
                             )}
 
                             {/* Step 6: Lampiran Dokumen */}
                             {currentStep === 6 && (
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <FileCheck className="h-5 w-5 text-primary" />
-                                        <CardTitle>Lampiran Dokumen</CardTitle>
-                                    </div>
-                                    <CardDescription>
-                                        Upload dokumen pendukung pendaftaran
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="surat_tugas_file">
-                                            Surat Tugas dari organisasi <span className="text-red-500">*</span>
-                                        </Label>
+                                <Card>
+                                    <CardHeader>
                                         <div className="flex items-center gap-2">
-                                            <Input
-                                                ref={suratTugasInputRef}
-                                                id="surat_tugas_file"
-                                                type="file"
-                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                                onChange={(e) => handleFileChange('surat_tugas_file', e.target.files)}
-                                                className="hidden"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => suratTugasInputRef.current?.click()}
-                                            >
-                                                Pilih File
-                                            </Button>
+                                            <FileCheck className="h-5 w-5 text-primary" />
+                                            <CardTitle>Lampiran Dokumen</CardTitle>
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Upload 1 file. Maks 5 MB.
-                                        </p>
-                                        {data.surat_tugas_file && (
-                                            <div className="mt-3 space-y-2">
-                                                <p className="text-sm font-medium text-foreground">
-                                                    File yang dipilih:
-                                                </p>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between p-2 bg-muted rounded-md border border-border">
-                                                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                            <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium text-foreground truncate">
-                                                                    {data.surat_tugas_file.name}
-                                                                </p>
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    {formatFileSize(data.surat_tugas_file.size)}
-                                                                </p>
+                                        <CardDescription>
+                                            Upload dokumen pendukung pendaftaran
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="surat_tugas_file">
+                                                Surat Tugas dari organisasi <span className="text-red-500">*</span>
+                                            </Label>
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    ref={suratTugasInputRef}
+                                                    id="surat_tugas_file"
+                                                    type="file"
+                                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                                    onChange={(e) => handleFileChange('surat_tugas_file', e.target.files)}
+                                                    className="hidden"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => suratTugasInputRef.current?.click()}
+                                                >
+                                                    Pilih File
+                                                </Button>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Upload 1 file. Maks 5 MB.
+                                            </p>
+                                            {data.surat_tugas_file && (
+                                                <div className="mt-3 space-y-2">
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        File yang dipilih:
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center justify-between p-2 bg-muted rounded-md border border-border">
+                                                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-foreground truncate">
+                                                                        {data.surat_tugas_file.name}
+                                                                    </p>
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        {formatFileSize(data.surat_tugas_file.size)}
+                                                                    </p>
+                                                                </div>
                                                             </div>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                                                                onClick={() => handleRemoveFile('surat_tugas_file', 0)}
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
                                                         </div>
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-                                                            onClick={() => handleRemoveFile('surat_tugas_file', 0)}
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </Button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                        <InputError message={errors.surat_tugas_file} />
-                                    </div>
+                                            )}
+                                            <InputError message={errors.surat_tugas_file} />
+                                        </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="scan_str_file">
-                                            Scan STR Anggota Tim (Disatukan dalam 1 file) <span className="text-red-500">*</span>
-                                        </Label>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                ref={scanStrInputRef}
-                                                id="scan_str_file"
-                                                type="file"
-                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                                onChange={(e) => handleFileChange('scan_str_file', e.target.files)}
-                                                className="hidden"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => scanStrInputRef.current?.click()}
-                                            >
-                                                Pilih File
-                                            </Button>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Upload 1 file. Maks 5 MB.
-                                        </p>
-                                        {data.scan_str_file && (
-                                            <div className="mt-3 space-y-2">
-                                                <p className="text-sm font-medium text-foreground">
-                                                    File yang dipilih:
-                                                </p>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between p-2 bg-muted rounded-md border border-border">
-                                                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                            <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium text-foreground truncate">
-                                                                    {data.scan_str_file.name}
-                                                                </p>
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    {formatFileSize(data.scan_str_file.size)}
-                                                                </p>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="scan_str_file">
+                                                Scan STR Anggota Tim (Disatukan dalam 1 file) <span className="text-red-500">*</span>
+                                            </Label>
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    ref={scanStrInputRef}
+                                                    id="scan_str_file"
+                                                    type="file"
+                                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                                    onChange={(e) => handleFileChange('scan_str_file', e.target.files)}
+                                                    className="hidden"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => scanStrInputRef.current?.click()}
+                                                >
+                                                    Pilih File
+                                                </Button>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Upload 1 file. Maks 5 MB.
+                                            </p>
+                                            {data.scan_str_file && (
+                                                <div className="mt-3 space-y-2">
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        File yang dipilih:
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center justify-between p-2 bg-muted rounded-md border border-border">
+                                                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-foreground truncate">
+                                                                        {data.scan_str_file.name}
+                                                                    </p>
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        {formatFileSize(data.scan_str_file.size)}
+                                                                    </p>
+                                                                </div>
                                                             </div>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                                                                onClick={() => handleRemoveFile('scan_str_file', 0)}
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
                                                         </div>
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-                                                            onClick={() => handleRemoveFile('scan_str_file', 0)}
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </Button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                        <InputError message={errors.scan_str_file} />
-                                    </div>
+                                            )}
+                                            <InputError message={errors.scan_str_file} />
+                                        </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="daftar_nama_anggota_file">
-                                            Daftar Nama Anggota Tim Lengkap
-                                        </Label>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                ref={daftarNamaInputRef}
-                                                id="daftar_nama_anggota_file"
-                                                type="file"
-                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                                onChange={(e) => handleFileChange('daftar_nama_anggota_file', e.target.files)}
-                                                className="hidden"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => daftarNamaInputRef.current?.click()}
-                                            >
-                                                Pilih File
-                                            </Button>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Upload 1 file. Maks 5 MB.
-                                        </p>
-                                        {data.daftar_nama_anggota_file && (
-                                            <div className="mt-3 space-y-2">
-                                                <p className="text-sm font-medium text-foreground">
-                                                    File yang dipilih:
-                                                </p>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between p-2 bg-muted rounded-md border border-border">
-                                                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                            <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium text-foreground truncate">
-                                                                    {data.daftar_nama_anggota_file.name}
-                                                                </p>
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    {formatFileSize(data.daftar_nama_anggota_file.size)}
-                                                                </p>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="daftar_nama_anggota_file">
+                                                Daftar Nama Anggota Tim Lengkap
+                                            </Label>
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    ref={daftarNamaInputRef}
+                                                    id="daftar_nama_anggota_file"
+                                                    type="file"
+                                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                                    onChange={(e) => handleFileChange('daftar_nama_anggota_file', e.target.files)}
+                                                    className="hidden"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => daftarNamaInputRef.current?.click()}
+                                                >
+                                                    Pilih File
+                                                </Button>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Upload 1 file. Maks 5 MB.
+                                            </p>
+                                            {data.daftar_nama_anggota_file && (
+                                                <div className="mt-3 space-y-2">
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        File yang dipilih:
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center justify-between p-2 bg-muted rounded-md border border-border">
+                                                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-foreground truncate">
+                                                                        {data.daftar_nama_anggota_file.name}
+                                                                    </p>
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        {formatFileSize(data.daftar_nama_anggota_file.size)}
+                                                                    </p>
+                                                                </div>
                                                             </div>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                                                                onClick={() => handleRemoveFile('daftar_nama_anggota_file', 0)}
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
                                                         </div>
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-                                                            onClick={() => handleRemoveFile('daftar_nama_anggota_file', 0)}
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </Button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                        <InputError message={errors.daftar_nama_anggota_file} />
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                            )}
+                                            <InputError message={errors.daftar_nama_anggota_file} />
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             )}
 
                             <div className="flex justify-between gap-4">
@@ -1478,7 +1475,42 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                     </div>
                 </div>
 
-                <AppFooter />
+                {/* Partners / Didukung Oleh */}
+                <section className="py-12 border-t border-border bg-background mt-auto">
+                    <div className="container mx-auto px-4 text-center">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-8">Didukung Oleh</h3>
+
+                        <div className="overflow-hidden relative w-full group">
+                            <div className="flex animate-scroll hover:pause-scroll gap-12 items-center w-max">
+                                {[...partners, ...partners, ...partners].map((logo, index) => (
+                                    <div
+                                        key={`${logo.name}-${index}`}
+                                        className="flex items-center justify-center h-16 w-32 flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100"
+                                    >
+                                        <img
+                                            src={logo.image}
+                                            alt={logo.name}
+                                            className="max-h-full max-w-full object-contain drop-shadow-sm"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Gradient Masks for carousel */}
+                            <div className="absolute top-0 left-0 h-full w-24 bg-gradient-to-r from-background to-transparent pointer-events-none"></div>
+                            <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none"></div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Footer */}
+                <footer className="py-8 bg-card border-t border-border">
+                    <div className="container mx-auto px-4 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            Copyright © {new Date().getFullYear()} <span className="font-semibold text-primary">HEOC Kabupaten Agam</span>. All rights reserved.
+                        </p>
+                    </div>
+                </footer>
             </div>
 
             {/* Success Modal */}

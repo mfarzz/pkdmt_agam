@@ -14,6 +14,8 @@ class Disaster extends Model
         'slug',
         'description',
         'is_active',
+        'started_at',
+        'ended_at',
     ];
 
     protected $casts = [

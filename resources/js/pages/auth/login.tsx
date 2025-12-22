@@ -11,7 +11,8 @@ import { Form, Head } from '@inertiajs/react';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import { landing } from '@/routes';
-import { Lock, Mail, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 
 interface LoginProps {
     status?: string;
@@ -24,39 +25,64 @@ export default function Login({
     canResetPassword,
     canRegister,
 }: LoginProps) {
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <>
-            <Head title="Login - BECARES" />
-            <div className="min-h-screen bg-background flex flex-col">
-                {/* Header dengan tombol kembali */}
-                <div className="container mx-auto px-4 py-6">
+            <Head title="Login - HEOC" />
+            <div className="relative grid h-screen flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0">
+                {/* Left Side - Image */}
+                <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex">
+                    <div className="absolute inset-0">
+                        <img
+                            src="/image/login.jpg"
+                            alt="Login Background"
+                            className="h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40"></div>
+                    </div>
                     <Link
                         href={landing()}
-                        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="relative z-20 flex items-center gap-2 text-lg font-medium mb-auto"
                     >
-                        <ArrowLeft className="h-4 w-4" />
-                        Kembali ke Beranda
+                        <ArrowLeft className="h-5 w-5" />
+                        <span>Kembali ke Beranda</span>
                     </Link>
+                    <div className="relative z-20 mt-auto">
+                        <h2 className="text-3xl font-bold mb-4">HEOC Kabupaten Agam</h2>
+                        <p className="text-lg text-white/90">
+                            Health Emergency Operation Center
+                        </p>
+                        <p className="text-sm text-white/70 mt-2">
+                            Pusat kendali dan koordinasi penanggulangan krisis kesehatan
+                        </p>
+                    </div>
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 flex items-center justify-center px-4 py-12">
-                    <div className="w-full max-w-md">
-                        <Card className="p-8">
-                            <div className="flex flex-col items-center gap-4 mb-8">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                                    <Lock className="h-8 w-8 text-primary" />
-                                </div>
-                                <div className="text-center space-y-2">
-                                    <h1 className="text-2xl font-bold text-foreground">
-                                        Masuk ke BECARES
-                                    </h1>
-                                    <p className="text-sm text-muted-foreground">
-                                        Masukkan email dan password Anda untuk masuk
-                                    </p>
-                                </div>
-                            </div>
+                {/* Right Side - Login Form */}
+                <div className="w-full lg:p-8 flex items-center justify-center min-h-screen lg:min-h-0">
+                    <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px] px-4 py-8 lg:px-0">
+                        {/* Mobile: Back Button */}
+                        <div className="lg:hidden">
+                            <Link
+                                href={landing()}
+                                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                Kembali ke Beranda
+                            </Link>
+                        </div>
 
+                        <div className="flex flex-col items-start gap-2 text-left sm:items-center sm:text-center">
+                            <h1 className="text-2xl font-bold text-foreground">
+                                Masuk ke HEOC
+                            </h1>
+                            <p className="text-sm text-muted-foreground">
+                                Masukkan email dan password Anda untuk masuk
+                            </p>
+                        </div>
+
+                        <Card className="p-8 shadow-lg">
                             {status && (
                                 <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-sm font-medium text-green-700 text-center">
                                     {status}
@@ -111,14 +137,28 @@ export default function Login({
                                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     id="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     name="password"
                                     required
                                     tabIndex={2}
                                     autoComplete="current-password"
                                                         placeholder="Masukkan password"
-                                                        className="pl-10"
+                                                        className="pl-10 pr-10"
                                 />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        tabIndex={-1}
+                                                    >
+                                                        {showPassword ? (
+                                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                                        ) : (
+                                                            <Eye className="h-4 w-4 text-muted-foreground" />
+                                                        )}
+                                                    </Button>
                                                 </div>
                                 <InputError message={errors.password} />
                             </div>

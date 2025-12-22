@@ -72,11 +72,16 @@ class UserController extends Controller
             'Ruang Isolasi',
         ];
 
-        // Calculate jenis layanan frequency from active teams
+        // Calculate jenis layanan frequency from all approved teams (to match Informasi page)
         $jenisLayananCount = [];
         $timDenganLainnya = [];
         
-        foreach ($activeTeams as $team) {
+        // Filter only approved teams for this visualization
+        $approvedTeams = $allTeams->filter(function($team) {
+            return $team->status_pendaftaran === 'approved';
+        });
+        
+        foreach ($approvedTeams as $team) {
             if (empty($team->jenis_layanan_tersedia)) {
                 continue;
             }
@@ -174,12 +179,14 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::defaults()],
+            'role' => ['required', 'string', 'in:admin,superadmin'],
         ]);
 
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
         ]);
 
         return redirect()->route('manajemen-user')->with('success', 'User berhasil dibuat.');
@@ -194,11 +201,13 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'confirmed', Password::defaults()],
+            'role' => ['required', 'string', 'in:admin,superadmin'],
         ]);
 
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'role' => $validated['role'],
         ];
 
         // Update password hanya jika diisi

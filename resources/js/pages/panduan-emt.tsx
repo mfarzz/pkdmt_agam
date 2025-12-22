@@ -1,8 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, FileText, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import AppNavbar from '@/components/app-navbar';
-import AppFooter from '@/components/app-footer';
 import { useState } from 'react';
 
 export default function PanduanEmt() {
@@ -18,15 +16,12 @@ export default function PanduanEmt() {
         setExpandedItems(newExpanded);
     };
 
-    const navItems = [
-        {
-            name: 'Beranda',
-            link: '/',
-        },
-        {
-            name: 'Informasi',
-            link: '/informasi',
-        },
+    const partners = [
+        { name: 'Pemkab Agam', image: '/image/Logo_Agam_Regency.png' },
+        { name: 'Universitas Andalas', image: '/image/Logo_Unand.png' },
+        { name: 'Universitas Brawijaya', image: '/image/Logo_Universitas_Brawijaya.png' },
+        { name: 'RS Khusus Kanker', image: '/image/RSKKA.png' },
+        { name: 'Dinas Kesehatan', image: '/image/DKK.png' },
     ];
 
 
@@ -34,53 +29,23 @@ export default function PanduanEmt() {
         <>
             <Head title="Panduan Layanan EMT DMS" />
             <div className="min-h-screen bg-background flex flex-col">
-                <AppNavbar navItems={navItems} />
-
-                <div className="container mx-auto px-4 py-4 md:py-8 pt-20 md:pt-24 flex-1">
+                <div className="container mx-auto px-4 py-4 md:py-8 flex-1">
                     {/* Header */}
                     <div className="mb-6">
-                        {/* Mobile: Stacked Layout */}
-                        <div className="md:hidden space-y-4">
-                            <div className="flex items-center gap-3">
-                                <Link href="/">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-9 w-9"
-                                    >
-                                        <ArrowLeft className="h-4 w-4" />
-                                        <span className="sr-only">Kembali ke Layanan</span>
-                                    </Button>
-                                </Link>
-                                <div className="flex-1">
-                                    <h1 className="text-xl font-bold text-foreground">
-                                        Panduan Layanan EMT MDS
-                                    </h1>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Desktop: Original Layout */}
-                        <div className="hidden md:flex relative items-center justify-between">
-                            <Link href="/">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-9 w-9"
-                                >
-                                    <ArrowLeft className="h-4 w-4" />
-                                    <span className="sr-only">Kembali ke Layanan</span>
-                                </Button>
-                            </Link>
-
-                            <div className="absolute left-1/2 -translate-x-1/2 text-center">
-                                <h2 className="text-3xl font-bold text-foreground">
-                                    Panduan Layanan EMT MDS
-                                </h2>
-                            </div>
-
-                            <div className="w-9"></div>
-                        </div>
+                        <Link href="/">
+                            <Button
+                                variant="ghost"
+                                className="flex items-center gap-2"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                <span>Kembali ke Beranda</span>
+                            </Button>
+                        </Link>
+                    </div>
+                    <div className="mb-8 text-center">
+                        <h1 className="text-3xl font-bold text-foreground">
+                            Panduan Layanan EMT MDS
+                        </h1>
                     </div>
 
                     {/* Content */}
@@ -194,7 +159,43 @@ export default function PanduanEmt() {
                         </div>
                     </div>
                 </div>
-                <AppFooter />
+
+                {/* Partners / Didukung Oleh */}
+                <section className="py-12 border-t border-border bg-background mt-auto">
+                    <div className="container mx-auto px-4 text-center">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-8">Didukung Oleh</h3>
+
+                        <div className="overflow-hidden relative w-full group">
+                            <div className="flex animate-scroll hover:pause-scroll gap-12 items-center w-max">
+                                {[...partners, ...partners, ...partners].map((logo, index) => (
+                                    <div
+                                        key={`${logo.name}-${index}`}
+                                        className="flex items-center justify-center h-16 w-32 flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100"
+                                    >
+                                        <img
+                                            src={logo.image}
+                                            alt={logo.name}
+                                            className="max-h-full max-w-full object-contain drop-shadow-sm"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Gradient Masks for carousel */}
+                            <div className="absolute top-0 left-0 h-full w-24 bg-gradient-to-r from-background to-transparent pointer-events-none"></div>
+                            <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none"></div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Footer */}
+                <footer className="py-8 bg-card border-t border-border">
+                    <div className="container mx-auto px-4 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            Copyright © {new Date().getFullYear()} <span className="font-semibold text-primary">HEOC Kabupaten Agam</span>. All rights reserved.
+                        </p>
+                    </div>
+                </footer>
             </div>
         </>
     );

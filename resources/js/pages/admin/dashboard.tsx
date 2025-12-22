@@ -1,10 +1,12 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Activity, Stethoscope, CheckCircle, XCircle, Users } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -43,6 +45,84 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ success, statistics, aggregateData, jenisLayananData = [], activeDisasterName }: DashboardProps) {
+    const [isLoading, setIsLoading] = useState(true);
+    const { url } = usePage();
+
+    // Show skeleton while data is loading
+    useEffect(() => {
+        // Check if we have data, if not show skeleton
+        const hasData = statistics !== undefined || aggregateData !== undefined;
+
+        if (hasData) {
+            // Data is available, hide skeleton after a brief moment for smooth transition
+            const timer = setTimeout(() => {
+                setIsLoading(false);
+            }, 300);
+
+            return () => clearTimeout(timer);
+        } else {
+            // No data yet, keep showing skeleton
+            setIsLoading(true);
+        }
+    }, [statistics, aggregateData, url]);
+
+    // Show skeleton while loading
+    if (isLoading) {
+        return (
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Dashboard" />
+                <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
+                    {/* Header Skeleton */}
+                    <div>
+                        <Skeleton className="h-8 w-48 mb-2" />
+                        <Skeleton className="h-4 w-64" />
+                    </div>
+
+                    {/* Statistics Cards Skeleton */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[1, 2, 3].map((i) => (
+                            <Card key={i}>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-4 w-4 rounded" />
+                                </CardHeader>
+                                <CardContent>
+                                    <Skeleton className="h-8 w-16 mb-2" />
+                                    <Skeleton className="h-3 w-32" />
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {/* Charts Skeleton */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {[1, 2].map((i) => (
+                            <Card key={i}>
+                                <CardHeader>
+                                    <Skeleton className="h-6 w-48 mb-2" />
+                                    <Skeleton className="h-4 w-64" />
+                                </CardHeader>
+                                <CardContent>
+                                    <Skeleton className="h-[300px] w-full" />
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {/* Additional Chart Skeleton */}
+                    <Card>
+                        <CardHeader>
+                            <Skeleton className="h-6 w-56 mb-2" />
+                            <Skeleton className="h-4 w-72" />
+                        </CardHeader>
+                        <CardContent>
+                            <Skeleton className="h-[300px] w-full" />
+                        </CardContent>
+                    </Card>
+                </div>
+            </AppLayout>
+        );
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -159,8 +239,8 @@ export default function Dashboard({ success, statistics, aggregateData, jenisLay
                                             <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
                                             <YAxis />
                                             <Tooltip
-                                                formatter={(value: number, name: string, props: any) => [
-                                                    `${value} ${props.payload.unit}`,
+                                                formatter={(value: number | undefined, name: string | undefined, props: any) => [
+                                                    `${value ?? 0} ${props.payload.unit}`,
                                                     props.payload.name,
                                                 ]}
                                             />
@@ -199,7 +279,7 @@ export default function Dashboard({ success, statistics, aggregateData, jenisLay
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
                                             <YAxis />
-                                            <Tooltip formatter={(value: number) => [`${value} orang`, 'Jumlah']} />
+                                            <Tooltip formatter={(value: number | undefined) => [`${value ?? 0} orang`, 'Jumlah']} />
                                             <Bar dataKey="value" fill="#22c55e" radius={[8, 8, 0, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -226,16 +306,16 @@ export default function Dashboard({ success, statistics, aggregateData, jenisLay
                                             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                                         >
                                             <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis 
-                                                dataKey="name" 
-                                                angle={-45} 
-                                                textAnchor="end" 
+                                            <XAxis
+                                                dataKey="name"
+                                                angle={-45}
+                                                textAnchor="end"
                                                 height={100}
                                                 interval={0}
                                             />
                                             <YAxis />
-                                            <Tooltip 
-                                                formatter={(value: number) => [`${value} tim`, 'Jumlah Tim']} 
+                                            <Tooltip
+                                                formatter={(value: number | undefined) => [`${value ?? 0} tim`, 'Jumlah Tim']}
                                             />
                                             <Bar dataKey="count" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
                                         </BarChart>

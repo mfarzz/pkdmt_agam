@@ -33,6 +33,7 @@ interface User {
     id: number;
     name: string;
     email: string;
+    role: string;
     created_at: string;
 }
 
@@ -169,6 +170,22 @@ export default function ManajemenUser({ users, success }: ManajemenUserProps) {
                                                 </div>
                                                 <InputError message={errors.password_confirmation} />
                                             </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="role">
+                                                    Role
+                                                </Label>
+                                                <select
+                                                    id="role"
+                                                    name="role"
+                                                    required
+                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    <option value="admin">Admin</option>
+                                                    <option value="superadmin">Superadmin</option>
+                                                </select>
+                                                <InputError message={errors.role} />
+                                            </div>
                                         </div>
 
                                         <div className="flex justify-end gap-2 pt-4">
@@ -299,6 +316,23 @@ export default function ManajemenUser({ users, success }: ManajemenUserProps) {
                                                     </div>
                                                     <InputError message={errors.password_confirmation} />
                                                 </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="edit_role">
+                                                        Role
+                                                    </Label>
+                                                    <select
+                                                        id="edit_role"
+                                                        name="role"
+                                                        required
+                                                        defaultValue={selectedUser.role}
+                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        <option value="admin">Admin</option>
+                                                        <option value="superadmin">Superadmin</option>
+                                                    </select>
+                                                    <InputError message={errors.role} />
+                                                </div>
                                             </div>
 
                                             <div className="flex justify-end gap-2 pt-4">
@@ -357,6 +391,9 @@ export default function ManajemenUser({ users, success }: ManajemenUserProps) {
                                             Tanggal Dibuat
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Role
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                             Aksi
                                         </th>
                                     </tr>
@@ -382,6 +419,14 @@ export default function ManajemenUser({ users, success }: ManajemenUserProps) {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                                 {user.email}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'superadmin'
+                                                    ? 'bg-purple-100 text-purple-800'
+                                                    : 'bg-blue-100 text-blue-800'
+                                                    }`}>
+                                                    {user.role}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                                 {new Date(user.created_at).toLocaleDateString('id-ID', {

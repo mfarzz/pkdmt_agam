@@ -4,7 +4,7 @@ import { Head, router } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, CheckCircle2, XCircle, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, CheckCircle2, XCircle, Trash2, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import {
     Dialog,
@@ -87,7 +87,7 @@ function getStatusBadgeStyle(status: string | null): { variant: 'default' | 'sec
     }
 
     const statusLower = status.toLowerCase().trim();
-    
+
     // Map status to different colors
     if (statusLower === 'aktif') {
         return { variant: 'default', className: 'bg-green-500 hover:bg-green-600 text-white' };
@@ -108,8 +108,8 @@ function getStatusBadgeStyle(status: string | null): { variant: 'default' | 'sec
 function getStatusBadge(status: string | null, statusPendaftaran?: string) {
     // Prioritize status_penugasan if available, otherwise use status_pendaftaran
     const displayStatus = status || statusPendaftaran || 'Tidak diketahui';
-    const badgeStyle = getStatusBadgeStyle(status || statusPendaftaran);
-    
+    const badgeStyle = getStatusBadgeStyle(status || statusPendaftaran || null);
+
     return (
         <Badge
             variant={badgeStyle.variant}
@@ -123,22 +123,22 @@ function getStatusBadge(status: string | null, statusPendaftaran?: string) {
 export default function KelolaPendaftaran({ registrations, success }: KelolaPendaftaranProps) {
     const { url } = usePage();
     const urlParams = new URLSearchParams(url.split('?')[1] || '');
-    
+
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [registrationToDelete, setRegistrationToDelete] = useState<Registration | null>(null);
-    
+
     // Initialize filter states from URL params
     const [searchQuery, setSearchQuery] = useState(urlParams.get('search') || '');
     const [statusFilter, setStatusFilter] = useState(urlParams.get('status') || '');
     const [sortBy, setSortBy] = useState(urlParams.get('sort_by') || 'created_at');
     const [sortOrder, setSortOrder] = useState(urlParams.get('sort_order') || 'desc');
-    
+
     // Get display value for status filter (convert empty string to 'all' for Select)
     const statusFilterDisplay = statusFilter || 'all';
-    
+
     // Track if component just mounted
     const isInitialMount = useRef(true);
-    
+
     // Update URL when filters change
     const updateFilters = (search: string, status: string, sortBy: string, sortOrder: string, resetPage: boolean = true) => {
         if (isInitialMount.current) {
@@ -148,25 +148,25 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
         // Start with current URL params to preserve page and other params
         const currentParams = new URLSearchParams(window.location.search);
         const params = new URLSearchParams();
-        
+
         // Preserve page parameter if not resetting
         if (!resetPage && currentParams.has('page')) {
             params.set('page', currentParams.get('page')!);
         }
-        
+
         // Set filter parameters
         if (search.trim()) {
             params.set('search', search.trim());
         }
-        
+
         if (status) {
             params.set('status', status);
         }
-        
+
         if (sortBy && sortBy !== 'created_at') {
             params.set('sort_by', sortBy);
         }
-        
+
         if (sortOrder && sortOrder !== 'desc') {
             params.set('sort_order', sortOrder);
         }
@@ -178,17 +178,17 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
         const currentPath = window.location.pathname;
         const currentSearch = window.location.search;
         const currentUrl = currentPath + currentSearch;
-        
+
         // Only navigate if filter parameters actually changed (ignore page param)
         const currentParamsWithoutPage = new URLSearchParams(currentSearch);
         const newParamsWithoutPage = new URLSearchParams(queryString);
         currentParamsWithoutPage.delete('page');
         newParamsWithoutPage.delete('page');
-        
+
         // Compare filter params only (not page)
         const currentFilterString = currentParamsWithoutPage.toString();
         const newFilterString = newParamsWithoutPage.toString();
-        
+
         // Only navigate if filter params changed
         if (currentFilterString !== newFilterString) {
             router.get(newUrl, {}, {
@@ -211,8 +211,8 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
         }
 
         // Only update if filters actually changed (not just on re-render from pagination)
-        const filtersChanged = 
-            prevFiltersRef.current.search !== searchQuery || 
+        const filtersChanged =
+            prevFiltersRef.current.search !== searchQuery ||
             prevFiltersRef.current.status !== statusFilter ||
             prevFiltersRef.current.sortBy !== sortBy ||
             prevFiltersRef.current.sortOrder !== sortOrder;
@@ -254,7 +254,7 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
         const queryParams = getCurrentQueryParams();
         const queryString = queryParams.toString();
         const redirectUrl = queryString ? `/kelola-pendaftaran?${queryString}` : '/kelola-pendaftaran';
-        
+
         router.put(`/kelola-pendaftaran/${id}/status`, {
             status_pendaftaran: status,
         }, {
@@ -268,7 +268,7 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
             },
         });
     };
-    
+
     const handleSort = (column: string) => {
         if (sortBy === column) {
             // Toggle sort order
@@ -279,12 +279,12 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
             setSortOrder('asc');
         }
     };
-    
+
     const getSortIcon = (column: string) => {
         if (sortBy !== column) {
             return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
         }
-        return sortOrder === 'asc' 
+        return sortOrder === 'asc'
             ? <ArrowUp className="h-4 w-4 ml-1" />
             : <ArrowDown className="h-4 w-4 ml-1" />;
     };
@@ -299,7 +299,7 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
             const queryParams = getCurrentQueryParams();
             const queryString = queryParams.toString();
             const redirectUrl = queryString ? `/kelola-pendaftaran?${queryString}` : '/kelola-pendaftaran';
-            
+
             router.delete(`/kelola-pendaftaran/${registrationToDelete.id}`, {
                 preserveScroll: true,
                 onSuccess: () => {
@@ -315,6 +315,17 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
         }
     };
 
+    const handleExport = () => {
+        const params = new URLSearchParams();
+        if (searchQuery.trim()) params.set('search', searchQuery.trim());
+        if (statusFilter) params.set('status', statusFilter);
+
+        const queryString = params.toString();
+        const url = queryString ? `/kelola-pendaftaran/export?${queryString}` : '/kelola-pendaftaran/export';
+
+        window.open(url, '_blank');
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola Pendaftaran DMT" />
@@ -326,6 +337,10 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
                             Kelola pendaftaran Disaster Medical Team yang masuk melalui form web
                         </p>
                     </div>
+                    <Button onClick={handleExport} variant="outline" className="gap-2">
+                        <Download className="h-4 w-4" />
+                        Export Excel
+                    </Button>
                 </div>
 
                 {success && (
@@ -356,7 +371,7 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
                                         className="pl-9"
                                     />
                                 </div>
-                                
+
                                 {/* Status Filter */}
                                 <Select value={statusFilterDisplay} onValueChange={(value) => setStatusFilter(value === 'all' ? '' : value)}>
                                     <SelectTrigger className="w-full sm:w-[180px]">
@@ -370,7 +385,7 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
                                     </SelectContent>
                                 </Select>
                             </div>
-                            
+
                             {/* Clear Filters Button */}
                             {(searchQuery || statusFilter) && (
                                 <Button
@@ -386,7 +401,7 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
                                 </Button>
                             )}
                         </div>
-                        
+
                         {!registrations.data || registrations.data.length === 0 ? (
                             <div className="text-center py-12 text-muted-foreground">
                                 <p>Belum ada pendaftaran yang masuk.</p>
@@ -456,93 +471,93 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
                                         </thead>
                                         <tbody>
                                             {registrations.data.map((registration) => (
-                                            <tr key={registration.id} className="border-b hover:bg-muted/50">
-                                                <td className="p-4">{registration.nama_dmt}</td>
-                                                <td className="p-4">{registration.nama_ketua_tim}</td>
-                                                <td className="p-4">{getStatusBadge(registration.status_penugasan, registration.status_pendaftaran)}</td>
-                                                <td className="p-4">
-                                                    {registration.tanggal_kedatangan 
-                                                        ? new Date(registration.tanggal_kedatangan).toLocaleDateString('id-ID')
-                                                        : '-'}
-                                                </td>
-                                                <td className="p-4">{registration.email}</td>
-                                                <td className="p-4">
-                                                    {new Date(registration.created_at).toLocaleDateString('id-ID', {
-                                                        year: 'numeric',
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={() => handleView(registration.id)}
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent>
-                                                                <p>Lihat Detail</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                        {registration.status_pendaftaran === 'pending' && (
-                                                            <>
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild>
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            onClick={() => handleStatusChange(registration.id, 'approved')}
-                                                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                                        >
-                                                                            <CheckCircle2 className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent>
-                                                                        <p>Setujui</p>
-                                                                    </TooltipContent>
-                                                                </Tooltip>
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild>
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            onClick={() => handleStatusChange(registration.id, 'rejected')}
-                                                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                                        >
-                                                                            <XCircle className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent>
-                                                                        <p>Tolak</p>
-                                                                    </TooltipContent>
-                                                                </Tooltip>
-                                                            </>
-                                                        )}
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={() => handleDeleteClick(registration)}
-                                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent>
-                                                                <p>Hapus</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                                <tr key={registration.id} className="border-b hover:bg-muted/50">
+                                                    <td className="p-4">{registration.nama_dmt}</td>
+                                                    <td className="p-4">{registration.nama_ketua_tim}</td>
+                                                    <td className="p-4">{getStatusBadge(registration.status_penugasan, registration.status_pendaftaran)}</td>
+                                                    <td className="p-4">
+                                                        {registration.tanggal_kedatangan
+                                                            ? new Date(registration.tanggal_kedatangan).toLocaleDateString('id-ID')
+                                                            : '-'}
+                                                    </td>
+                                                    <td className="p-4">{registration.email}</td>
+                                                    <td className="p-4">
+                                                        {new Date(registration.created_at).toLocaleDateString('id-ID', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                        })}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() => handleView(registration.id)}
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Lihat Detail</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                            {registration.status_pendaftaran === 'pending' && (
+                                                                <>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                onClick={() => handleStatusChange(registration.id, 'approved')}
+                                                                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                                            >
+                                                                                <CheckCircle2 className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>Setujui</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                onClick={() => handleStatusChange(registration.id, 'rejected')}
+                                                                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                            >
+                                                                                <XCircle className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>Tolak</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </>
+                                                            )}
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() => handleDeleteClick(registration)}
+                                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <p>Hapus</p>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             ))}
                                         </tbody>
                                     </table>

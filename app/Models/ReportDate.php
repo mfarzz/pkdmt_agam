@@ -10,20 +10,17 @@ class ReportDate extends Model
     use HasFactory;
 
     protected $fillable = [
-        'report_link_id',
+        'disaster_id',
+        'is_dmt',
         'date',
-        'folder_link',
+        'file_path',
+        'file_name',
+        'file_size',
+        'uploaded_by',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'is_dmt' => 'boolean',
     ];
-
-    /**
-     * Get the report link that owns this date.
-     */
-    public function reportLink()
-    {
-        return $this->belongsTo(ReportLink::class);
-    }
 }

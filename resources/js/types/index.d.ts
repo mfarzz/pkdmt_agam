@@ -7,6 +7,8 @@ export interface Disaster {
     slug: string;
     description: string | null;
     is_active: boolean;
+    started_at: string | null;
+    ended_at: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -34,6 +36,8 @@ export interface NavItem {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    roles?: string[];
+    items?: Omit<NavItem, 'items' | 'icon' | 'roles'>[]; // Submenus don't have icons or nested items
 }
 
 export interface SharedData {
@@ -55,4 +59,15 @@ export interface User {
     created_at: string;
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
+}
+export interface ReportFile {
+    id: number;
+    file_name: string;
+    file_path: string | null;
+    file_size: number | null;
+}
+
+export interface ReportGroup {
+    date: string;
+    files: ReportFile[];
 }

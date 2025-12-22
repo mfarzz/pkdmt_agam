@@ -1,5 +1,3 @@
-import AppFooter from '@/components/app-footer';
-import AppNavbar from '@/components/app-navbar';
 import { Button } from '@/components/ui/button';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, ChevronLeft, ChevronRight, Download, ExternalLink } from 'lucide-react';
@@ -35,15 +33,12 @@ export default function Infografis({ infografis, activeDisasterName }: Infografi
     const infografisData = infografis?.data || [];
     const paginationLinks = infografis?.links || [];
 
-    const navItems = [
-        {
-            name: 'Beranda',
-            link: '/',
-        },
-        {
-            name: 'Informasi',
-            link: '/informasi',
-        },
+    const partners = [
+        { name: 'Pemkab Agam', image: '/image/Logo_Agam_Regency.png' },
+        { name: 'Universitas Andalas', image: '/image/Logo_Unand.png' },
+        { name: 'Universitas Brawijaya', image: '/image/Logo_Universitas_Brawijaya.png' },
+        { name: 'RS Khusus Kanker', image: '/image/RSKKA.png' },
+        { name: 'Dinas Kesehatan', image: '/image/DKK.png' },
     ];
 
     // Auto-scan infografis folder on page load - using same logic as scan button
@@ -93,63 +88,26 @@ export default function Infografis({ infografis, activeDisasterName }: Infografi
         <>
             <Head title="Informasi Umum - PKDMT" />
             <div className="min-h-screen bg-background flex flex-col">
-                <AppNavbar navItems={navItems} />
-
-                <div className="container mx-auto px-4 py-4 md:py-8 pt-20 md:pt-24 flex-1">
-                    {/* Header - Mobile Optimized */}
-                    <div className="mb-4 md:mb-8">
-                        {/* Mobile: Stacked Layout */}
-                        <div className="md:hidden space-y-4">
-                            {/* Top Row: Back Button + Title */}
-                            <div className="flex items-center gap-3">
-                                <Link href="/">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-9 w-9"
-                                    >
-                                        <ArrowLeft className="h-4 w-4" />
-                                        <span className="sr-only">Kembali ke Beranda</span>
-                                    </Button>
-                                </Link>
-                                <div className="flex-1">
-                                    <h1 className="text-xl font-bold text-foreground">
-                                        Informasi Umum
-                                    </h1>
-                                    <p className="text-xs text-muted-foreground">
-                                        {activeDisasterName ? `Infografis ${activeDisasterName}` : 'Infografis dan informasi penting'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Desktop: Original Layout */}
-                        <div className="hidden md:flex relative items-center justify-between">
-                            {/* Tombol Kembali - Kiri */}
-                            <Link href="/">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-9 w-9"
-                                >
-                                    <ArrowLeft className="h-4 w-4" />
-                                    <span className="sr-only">Kembali ke Beranda</span>
-                                </Button>
-                            </Link>
-
-                            {/* Judul - Tengah */}
-                            <div className="absolute left-1/2 -translate-x-1/2 text-center">
-                                <h1 className="text-3xl font-bold text-foreground">
-                                    Informasi Umum
-                                </h1>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    {activeDisasterName ? `Infografis dan informasi penting tentang ${activeDisasterName}` : 'Infografis dan informasi penting tentang Kabupaten Agam'}
-                                </p>
-                            </div>
-
-                            {/* Spacer untuk balance */}
-                            <div className="w-9"></div>
-                        </div>
+                <div className="container mx-auto px-4 py-4 md:py-8 flex-1">
+                    {/* Header */}
+                    <div className="mb-6">
+                        <Link href="/">
+                            <Button
+                                variant="ghost"
+                                className="flex items-center gap-2"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                <span>Kembali ke Beranda</span>
+                            </Button>
+                        </Link>
+                    </div>
+                    <div className="mb-8 text-center">
+                        <h1 className="text-3xl font-bold text-foreground">
+                            Informasi Umum
+                        </h1>
+                        <p className="mt-2 text-lg text-muted-foreground">
+                            {activeDisasterName ? `Infografis dan informasi penting tentang ${activeDisasterName}` : 'Infografis dan informasi penting tentang Kabupaten Agam'}
+                        </p>
                     </div>
 
                     {infografisData.length === 0 ? (
@@ -162,18 +120,18 @@ export default function Infografis({ infografis, activeDisasterName }: Infografi
                                 {infografisData.map((item) => {
                                     const isPdf = item.mime_type === 'application/pdf';
                                     return (
-                                    <div
-                                        key={item.id}
-                                        className="group"
-                                    >
-                                        <a
-                                            href={`/infografis/${item.id}/preview`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="cursor-pointer block"
+                                        <div
+                                            key={item.id}
+                                            className="group"
                                         >
-                                            <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] bg-card">
-                                                <div className="aspect-video bg-muted relative overflow-hidden">
+                                            <a
+                                                href={`/infografis/${item.id}/preview`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="cursor-pointer block"
+                                            >
+                                                <div className="border rounded-lg overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] bg-card">
+                                                    <div className="aspect-video bg-muted relative overflow-hidden">
                                                         {isPdf ? (
                                                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
                                                                 <div className="text-center p-4">
@@ -184,47 +142,47 @@ export default function Infografis({ infografis, activeDisasterName }: Infografi
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                    <img
-                                                        src={`/infografis/${item.id}/image`}
-                                                        alt={item.file_name}
-                                                        className="w-full h-full object-contain transition-transform group-hover:scale-105"
-                                                        loading="lazy"
-                                                        crossOrigin="anonymous"
-                                                        referrerPolicy="no-referrer"
-                                                        onError={(e) => {
+                                                            <img
+                                                                src={`/infografis/${item.id}/image`}
+                                                                alt={item.file_name}
+                                                                className="w-full h-full object-contain transition-transform group-hover:scale-105"
+                                                                loading="lazy"
+                                                                crossOrigin="anonymous"
+                                                                referrerPolicy="no-referrer"
+                                                                onError={(e) => {
                                                                     // Hide image if proxy fails to avoid CORS issues
-                                                            const target = e.target as HTMLImageElement;
+                                                                    const target = e.target as HTMLImageElement;
                                                                     target.style.display = 'none';
-                                                        }}
-                                                    />
+                                                                }}
+                                                            />
                                                         )}
-                                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                                        <div className="bg-black/50 rounded-full p-2">
-                                                            <ExternalLink className="h-4 w-4 text-white" />
+                                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                                            <div className="bg-black/50 rounded-full p-2">
+                                                                <ExternalLink className="h-4 w-4 text-white" />
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                    <div className="p-4">
+                                                        <p className="text-sm font-medium line-clamp-2 flex items-center gap-1" title={item.file_name}>
+                                                            {item.file_name}
+                                                            <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="p-4">
-                                                    <p className="text-sm font-medium line-clamp-2 flex items-center gap-1" title={item.file_name}>
-                                                        {item.file_name}
-                                                        <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </a>
-                                        <div className="mt-2 flex justify-end">
-                                            <a
-                                                href={`/infografis/${item.id}/download`}
-                                                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                }}
-                                            >
-                                                <Download className="h-3 w-3" />
-                                                Download
                                             </a>
+                                            <div className="mt-2 flex justify-end">
+                                                <a
+                                                    href={`/infografis/${item.id}/download`}
+                                                    className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                    }}
+                                                >
+                                                    <Download className="h-3 w-3" />
+                                                    Download
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
                                     );
                                 })}
                             </div>
@@ -294,7 +252,43 @@ export default function Infografis({ infografis, activeDisasterName }: Infografi
                         </>
                     )}
                 </div>
-                <AppFooter />
+
+                {/* Partners / Didukung Oleh */}
+                <section className="py-12 border-t border-border bg-background mt-auto">
+                    <div className="container mx-auto px-4 text-center">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-8">Didukung Oleh</h3>
+
+                        <div className="overflow-hidden relative w-full group">
+                            <div className="flex animate-scroll hover:pause-scroll gap-12 items-center w-max">
+                                {[...partners, ...partners, ...partners].map((logo, index) => (
+                                    <div
+                                        key={`${logo.name}-${index}`}
+                                        className="flex items-center justify-center h-16 w-32 flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100"
+                                    >
+                                        <img
+                                            src={logo.image}
+                                            alt={logo.name}
+                                            className="max-h-full max-w-full object-contain drop-shadow-sm"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Gradient Masks for carousel */}
+                            <div className="absolute top-0 left-0 h-full w-24 bg-gradient-to-r from-background to-transparent pointer-events-none"></div>
+                            <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none"></div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Footer */}
+                <footer className="py-8 bg-card border-t border-border">
+                    <div className="container mx-auto px-4 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            Copyright © {new Date().getFullYear()} <span className="font-semibold text-primary">HEOC Kabupaten Agam</span>. All rights reserved.
+                        </p>
+                    </div>
+                </footer>
             </div>
         </>
     );

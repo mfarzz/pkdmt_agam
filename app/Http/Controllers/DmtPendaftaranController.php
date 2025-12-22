@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DmtPendaftaranController extends Controller
 {
@@ -230,6 +231,106 @@ class DmtPendaftaranController extends Controller
         // Preserve query parameters (page, search, status, sort)
         return redirect()->route('kelola-pendaftaran', $request->only(['page', 'search', 'status', 'sort_by', 'sort_order']))
             ->with('success', 'Pendaftaran berhasil dihapus.');
+    }
+    /**
+     * Export registrations to CSV.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $disasterId = $request->session()->get('admin_active_disaster_id');
+        $search = $request->get('search', '');
+        $statusFilter = $request->get('status', '');
+        
+        // Get registrations for active disaster
+        $query = DmtData::query();
+        
+        if ($disasterId) {
+            $query->where('disaster_id', $disasterId);
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        // Apply filters to match the view
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_dmt', 'like', "%{$search}%")
+                  ->orWhere('nama_ketua_tim', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('nomor_hp', 'like', "%{$search}%");
+            });
+        }
+
+        if ($statusFilter) {
+            $query->where('status_pendaftaran', $statusFilter);
+        }
+
+        $registrations = $query->orderBy('created_at', 'desc')->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="data_pendaftaran_dmt_' . date('Y-m-d_H-i-s') . '.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($registrations) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for Excel compatibility
+            fputs($file, "\xEF\xBB\xBF");
+
+            // Header row
+            fputcsv($file, [
+                'No',
+                'Nama DMT',
+                'Nama Ketua Tim',
+                'Status Pendaftaran',
+                'Status Penugasan',
+                'Tanggal Kedatangan',
+                'Email',
+                'Nomor HP',
+                'Tanggal Daftar',
+                'Masa Penugasan (Hari)',
+                'Rencana Kepulangan',
+                'Jumlah Dokter Umum',
+                'Jumlah Perawat',
+                'Jumlah Bidan',
+                'Jumlah Apoteker',
+                'Jumlah Psikolog',
+                'Jumlah Staf Logistik',
+                'Jumlah Staf Admin',
+                'Jumlah Petugas Keamanan'
+            ]);
+
+            foreach ($registrations as $index => $row) {
+                fputcsv($file, [
+                    $index + 1,
+                    $row->nama_dmt,
+                    $row->nama_ketua_tim,
+                    $row->status_pendaftaran,
+                    $row->calculateStatusFromDates() ?? '-',
+                    $row->tanggal_kedatangan ? $row->tanggal_kedatangan->format('Y-m-d') : '-',
+                    $row->email,
+                    $row->nomor_hp,
+                    $row->created_at ? $row->created_at->format('Y-m-d H:i:s') : '-',
+                    $row->masa_penugasan_hari ?? '-',
+                    $row->rencana_tanggal_kepulangan ? $row->rencana_tanggal_kepulangan->format('Y-m-d') : '-',
+                    $row->jumlah_dokter_umum ?? 0,
+                    $row->jumlah_perawat ?? 0,
+                    $row->jumlah_bidan ?? 0,
+                    $row->jumlah_apoteker ?? 0,
+                    $row->jumlah_psikolog ?? 0,
+                    $row->jumlah_staf_logistik ?? 0,
+                    $row->jumlah_staf_administrasi ?? 0,
+                    $row->jumlah_petugas_keamanan ?? 0,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
 

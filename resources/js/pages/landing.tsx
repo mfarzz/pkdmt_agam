@@ -1,9 +1,20 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { login } from '@/routes';
-import { Head, Link } from '@inertiajs/react';
-import { Activity, BookOpen, Calendar, CheckCircle, FileText, Image as ImageIcon, LogIn, Shield, Users } from 'lucide-react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
+import { Activity, BookOpen, Calendar, CheckCircle, FileText, Image as ImageIcon, Info, LogIn, Shield, Users, User, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useInitials } from '@/hooks/use-initials';
+import { type SharedData } from '@/types';
 
 interface LandingProps {
     totalBencana?: number;
@@ -13,6 +24,15 @@ interface LandingProps {
 export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps) {
     const [countBencana, setCountBencana] = useState(0);
     const [countTim, setCountTim] = useState(0);
+    const page = usePage<SharedData>();
+    const { auth } = page.props;
+    const getInitials = useInitials();
+    const isAuthenticated = !!auth?.user;
+    const user = auth?.user;
+
+    const handleLogout = () => {
+        router.post('/logout');
+    };
 
     // Count up animation
     useEffect(() => {
@@ -46,6 +66,14 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
             icon: ImageIcon,
             color: 'bg-orange-100 text-orange-600',
             hoverColor: 'group-hover:bg-orange-600 group-hover:text-white',
+        },
+        {
+            title: 'Informasi DMT',
+            description: 'Data tim medis yang bertugas di Kab. Agam.',
+            href: '/informasi',
+            icon: Info,
+            color: 'bg-cyan-100 text-cyan-600',
+            hoverColor: 'group-hover:bg-cyan-600 group-hover:text-white',
         },
         {
             title: 'Pendaftaran DMT',
@@ -104,12 +132,62 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
                             <span className="text-xs font-medium text-orange-100/90 tracking-wider uppercase">Kabupaten Agam</span>
                         </div>
                     </div>
-                    <Link href={login()}>
-                        <Button variant="secondary" className="bg-white/90 hover:bg-white text-orange-700 hover:text-orange-800 font-semibold shadow-lg backdrop-blur-sm transition-all hover:scale-105">
-                            <LogIn className="h-4 w-4 mr-2" />
-                            Masuk Sistem
-                        </Button>
-                    </Link>
+                    {isAuthenticated ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="h-10 w-10 rounded-full p-0 bg-white/90 hover:bg-white shadow-lg backdrop-blur-sm transition-all hover:scale-105"
+                                >
+                                    <Avatar className="h-9 w-9">
+                                        <AvatarImage
+                                            src={user?.avatar}
+                                            alt={user?.name || ''}
+                                        />
+                                        <AvatarFallback className="bg-orange-100 text-orange-700 font-semibold">
+                                            {getInitials(user?.name || '')}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                                <DropdownMenuLabel className="p-0 font-normal">
+                                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                                        <div className="flex flex-col">
+                                            <span className="font-medium">{user?.name || ''}</span>
+                                            {user?.email && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    {user.email}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link href="/dashboard" className="w-full cursor-pointer">
+                                        <User className="mr-2 h-4 w-4" />
+                                        Dashboard
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={handleLogout}
+                                    className="cursor-pointer text-red-600 focus:text-red-600"
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Logout
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <Link href={login()}>
+                            <Button variant="secondary" className="bg-white/90 hover:bg-white text-orange-700 hover:text-orange-800 font-semibold shadow-lg backdrop-blur-sm transition-all hover:scale-105">
+                                <LogIn className="h-4 w-4 mr-2" />
+                                Masuk Sistem
+                            </Button>
+                        </Link>
+                    )}
                 </div>
             </header>
 
@@ -175,7 +253,7 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {menuItems.map((item, index) => {
                             const Icon = item.icon;
                             return (

@@ -47,7 +47,15 @@ class DisasterController extends Controller
 
         // If setting as active, deactivate others
         if ($validated['is_active'] ?? false) {
-            Disaster::where('is_active', true)->update(['is_active' => false]);
+            Disaster::where('is_active', true)->update([
+                'is_active' => false,
+                'ended_at' => now(),
+            ]);
+            // Set started_at when activating
+            $validated['started_at'] = now();
+        } else {
+            // If creating as inactive, set ended_at to now (or null if never started)
+            $validated['ended_at'] = null;
         }
 
         $disaster = Disaster::create($validated);
@@ -92,12 +100,28 @@ class DisasterController extends Controller
              $validated['slug'] = $originalSlug . '-' . $count++;
         }
 
+        // Track previous state
+        $wasActive = $disaster->is_active;
+        $isBecomingActive = $validated['is_active'] ?? false;
+        $isBecomingInactive = !$isBecomingActive && $wasActive;
+
         // If setting as active, deactivate others
-        if ($validated['is_active'] ?? false) {
-            Disaster::where('id', '!=', $disaster->id)->update(['is_active' => false]);
+        if ($isBecomingActive) {
+            Disaster::where('id', '!=', $disaster->id)->where('is_active', true)->update([
+                'is_active' => false,
+                'ended_at' => now(),
+            ]);
+            // Set started_at when activating (only if not already set)
+            if (!$disaster->started_at) {
+                $validated['started_at'] = now();
+            }
+            $validated['ended_at'] = null;
             // Update session to use this disaster as active
             $request->session()->put('admin_active_disaster_id', $disaster->id);
             $request->session()->put('admin_active_disaster_name', $disaster->name);
+        } elseif ($isBecomingInactive) {
+            // If becoming inactive, set ended_at
+            $validated['ended_at'] = now();
         }
 
         $disaster->update($validated);

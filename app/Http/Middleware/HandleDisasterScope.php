@@ -23,8 +23,9 @@ class HandleDisasterScope
             
             // Check if session has disaster_id
             if (!$request->session()->has($sessionKey)) {
-                // If not, pick the default one (or the first available)
-                $defaultDisaster = Disaster::where('slug', 'bencana-default')->first() ?? Disaster::first();
+                // If not, pick the active disaster (is_active = true) first, then fallback to first available
+                $activeDisaster = Disaster::where('is_active', true)->first();
+                $defaultDisaster = $activeDisaster ?? Disaster::where('slug', 'bencana-default')->first() ?? Disaster::first();
                 
                 if ($defaultDisaster) {
                     $request->session()->put($sessionKey, $defaultDisaster->id);

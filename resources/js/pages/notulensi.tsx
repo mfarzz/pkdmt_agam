@@ -1,5 +1,3 @@
-import AppFooter from '@/components/app-footer';
-import AppNavbar from '@/components/app-navbar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -9,14 +7,26 @@ import {
 } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, FileText } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, FileText, Image as ImageIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+interface NotulensiImage {
+    id: number;
+    image_path: string;
+    image_name: string;
+    description: string | null;
+    file_size: number;
+    mime_type: string;
+}
+
 interface NotulensiItem {
-    sheet_id: string;
-    sheet_link: string;
-    tab_name: string;
-    link_title: string | null;
+    type: 'spreadsheet' | 'image';
+    sheet_id?: string;
+    sheet_link?: string;
+    tab_name?: string;
+    link_title?: string | null;
+    images?: NotulensiImage[];
+    count?: number;
 }
 
 interface NotulensiLink {
@@ -35,15 +45,12 @@ export default function Notulensi({ notulensiLinks = [], activeDisasterName }: N
     const [notulensiData, setNotulensiData] = useState<Record<string, NotulensiItem[]>>({});
     const [loadingNotulensi, setLoadingNotulensi] = useState(false);
 
-    const navItems = [
-        {
-            name: 'Beranda',
-            link: '/',
-        },
-        {
-            name: 'Informasi',
-            link: '/informasi',
-        },
+    const partners = [
+        { name: 'Pemkab Agam', image: '/image/Logo_Agam_Regency.png' },
+        { name: 'Universitas Andalas', image: '/image/Logo_Unand.png' },
+        { name: 'Universitas Brawijaya', image: '/image/Logo_Universitas_Brawijaya.png' },
+        { name: 'RS Khusus Kanker', image: '/image/RSKKA.png' },
+        { name: 'Dinas Kesehatan', image: '/image/DKK.png' },
     ];
 
     // Fungsi untuk mendapatkan semua hari dalam bulan
@@ -235,124 +242,57 @@ export default function Notulensi({ notulensiLinks = [], activeDisasterName }: N
         <>
             <Head title="Notulensi Rapat Koordinasi" />
             <div className="min-h-screen bg-background flex flex-col">
-                <AppNavbar navItems={navItems} />
-
-                <div className="container mx-auto px-4 py-4 md:py-8 pt-20 md:pt-24 flex-1">
-                    {/* Header - Mobile Optimized */}
-                    <div className="mb-4 md:mb-6">
-                        {/* Mobile: Stacked Layout */}
-                        <div className="md:hidden space-y-4">
-                            {/* Top Row: Back Button + Title */}
-                            <div className="flex items-center gap-3">
-                                <Link href="/">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-9 w-9"
-                                    >
-                                        <ArrowLeft className="h-4 w-4" />
-                                        <span className="sr-only">Kembali ke Layanan</span>
-                                    </Button>
-                                </Link>
-                                <div className="flex-1">
-                                    <h1 className="text-xl font-bold text-foreground">
-                                        Notulensi Rapat Koordinasi
-                                    </h1>
-                                    <p className="text-xs text-muted-foreground">
-                                        {activeDisasterName ? `Kalender Notulensi ${activeDisasterName}` : 'Kalender Notulensi Bulanan'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Month Navigation */}
-                            <div className="flex items-center justify-between gap-2">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={goToToday}
-                                    className="h-8 px-3 text-xs"
-                                >
-                                    Hari Ini
-                                </Button>
-                                <div className="flex items-center gap-1 rounded-lg border border-border bg-card flex-1 justify-center">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => navigateMonth('prev')}
-                                        className="h-8 w-8"
-                                    >
-                                        <ChevronLeft className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <div className="px-2 py-1.5 text-xs font-semibold capitalize text-center min-w-[120px]">
-                                        {monthYear}
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => navigateMonth('next')}
-                                        className="h-8 w-8"
-                                    >
-                                        <ChevronRight className="h-3.5 w-3.5" />
-                                    </Button>
-                                </div>
-                            </div>
+                <div className="container mx-auto px-4 py-4 md:py-8 flex-1">
+                    {/* Header */}
+                    <div className="mb-6">
+                        <Link href="/">
+                            <Button
+                                variant="ghost"
+                                className="flex items-center gap-2"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                <span>Kembali ke Beranda</span>
+                            </Button>
+                        </Link>
+                    </div>
+                    <div className="mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="text-center md:text-left">
+                            <h1 className="text-3xl font-bold text-foreground">
+                                Notulensi Rapat Koordinasi
+                            </h1>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                {activeDisasterName ? `Kalender Notulensi ${activeDisasterName}` : 'Kalender Notulensi Bulanan'}
+                            </p>
                         </div>
-
-                        {/* Desktop: Original Layout */}
-                        <div className="hidden md:flex relative items-center justify-between">
-                            {/* Tombol Kembali - Kiri */}
-                            <Link href="/">
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={goToToday}
+                                className="h-9 px-4"
+                            >
+                                Hari Ini
+                            </Button>
+                            <div className="flex items-center gap-1 rounded-lg border border-border bg-card">
                                 <Button
                                     variant="ghost"
                                     size="icon"
+                                    onClick={() => navigateMonth('prev')}
                                     className="h-9 w-9"
                                 >
-                                    <ArrowLeft className="h-4 w-4" />
-                                    <span className="sr-only">Kembali ke Layanan</span>
+                                    <ChevronLeft className="h-4 w-4" />
                                 </Button>
-                            </Link>
-
-                            {/* Judul - Tengah */}
-                            <div className="absolute left-1/2 -translate-x-1/2 text-center">
-                                <h1 className="text-3xl font-bold text-foreground">
-                                    Notulensi Rapat Koordinasi
-                                </h1>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    {activeDisasterName ? `Kalender Notulensi ${activeDisasterName}` : 'Kalender Notulensi Bulanan'}
-                                </p>
-                            </div>
-
-                            {/* Navigation - Kanan */}
-                            <div className="flex items-center gap-2">
+                                <div className="px-4 py-2 text-sm font-semibold capitalize">
+                                    {monthYear}
+                                </div>
                                 <Button
                                     variant="ghost"
-                                    size="sm"
-                                    onClick={goToToday}
-                                    className="h-9 px-4"
+                                    size="icon"
+                                    onClick={() => navigateMonth('next')}
+                                    className="h-9 w-9"
                                 >
-                                    Hari Ini
+                                    <ChevronRight className="h-4 w-4" />
                                 </Button>
-                                <div className="flex items-center gap-1 rounded-lg border border-border bg-card">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => navigateMonth('prev')}
-                                        className="h-9 w-9"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-                                    <div className="px-4 py-2 text-sm font-semibold capitalize">
-                                        {monthYear}
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => navigateMonth('next')}
-                                        className="h-9 w-9"
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -423,30 +363,96 @@ export default function Notulensi({ notulensiLinks = [], activeDisasterName }: N
                                                                             className={`w-full truncate rounded px-1.5 py-0.5 text-xs transition-colors cursor-pointer text-left ${color.bg} ${color.text} ${color.hover}`}
                                                                         >
                                                                             <span className="font-medium">
-                                                                                {item.link_title || 'Notulensi'}
+                                                                                {item.type === 'spreadsheet' 
+                                                                                    ? `📊 ${item.link_title || 'Notulensi'}`
+                                                                                    : `🖼️ Notulensi Gambar${item.count && item.count > 1 ? ` (${item.count})` : ''}`
+                                                                                }
                                                                             </span>
                                                                         </button>
                                                                     </PopoverTrigger>
                                                                     <PopoverContent className="w-80" align="start">
                                                                         <div className="space-y-3">
-                                                                            <div className="font-semibold text-sm">
-                                                                                {item.link_title && (
-                                                                                    <div className="text-muted-foreground text-xs mb-1">
-                                                                                        {item.link_title}
-                                                                                    </div>
-                                                                                )}
-                                                                                Notulensi {item.tab_name}
+                                                                            <div className="font-semibold text-sm mb-2">
+                                                                                Notulensi {date.toLocaleDateString('id-ID', {
+                                                                                    day: 'numeric',
+                                                                                    month: 'long',
+                                                                                    year: 'numeric',
+                                                                                })}
                                                                             </div>
-                                                                            <a
-                                                                                href={item.sheet_link || '#'}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors p-2 rounded hover:bg-muted"
-                                                                            >
-                                                                                <FileText className="h-4 w-4" />
-                                                                                <span className="flex-1">Buka Notulensi</span>
-                                                                                <ExternalLink className="h-4 w-4" />
-                                                                            </a>
+                                                                            {item.type === 'spreadsheet' ? (
+                                                                                <>
+                                                                                    <div className="font-medium text-sm mb-1.5">
+                                                                                        {item.link_title && (
+                                                                                            <div className="text-muted-foreground text-xs mb-1">
+                                                                                                {item.link_title}
+                                                                                            </div>
+                                                                                        )}
+                                                                                        📊 Notulensi Spreadsheet
+                                                                                        {item.tab_name && ` - ${item.tab_name}`}
+                                                                                    </div>
+                                                                                    <a
+                                                                                        href={item.sheet_link || '#'}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors p-2 rounded hover:bg-muted"
+                                                                                    >
+                                                                                        <FileText className="h-4 w-4" />
+                                                                                        <span className="flex-1">Buka Spreadsheet</span>
+                                                                                        <ExternalLink className="h-4 w-4" />
+                                                                                    </a>
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <div className="font-medium text-sm mb-1.5">
+                                                                                        🖼️ Notulensi Gambar
+                                                                                        {item.count && item.count > 1 && ` (${item.count} gambar)`}
+                                                                                    </div>
+                                                                                    <button
+                                                                                        onClick={() => {
+                                                                                            // Open image gallery modal
+                                                                                            const modal = document.createElement('div');
+                                                                                            modal.className = 'fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4';
+                                                                                            modal.onclick = (e) => {
+                                                                                                if (e.target === modal) {
+                                                                                                    document.body.removeChild(modal);
+                                                                                                }
+                                                                                            };
+                                                                                            
+                                                                                            const gallery = document.createElement('div');
+                                                                                            gallery.className = 'max-w-4xl max-h-[90vh] overflow-auto bg-background rounded-lg p-4';
+                                                                                            
+                                                                                            const header = document.createElement('div');
+                                                                                            header.className = 'flex justify-between items-center mb-4';
+                                                                                            header.innerHTML = `
+                                                                                                <h3 class="text-lg font-semibold">Notulensi Gambar - ${date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</h3>
+                                                                                                <button class="text-muted-foreground hover:text-foreground" onclick="this.closest('.fixed').remove()">✕</button>
+                                                                                            `;
+                                                                                            
+                                                                                            const imagesContainer = document.createElement('div');
+                                                                                            imagesContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+                                                                                            
+                                                                                            item.images?.forEach((img, imgIndex) => {
+                                                                                                const imgDiv = document.createElement('div');
+                                                                                                imgDiv.className = 'space-y-2';
+                                                                                                imgDiv.innerHTML = `
+                                                                                                    <img src="${img.image_path}" alt="${img.image_name}" class="w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity" onclick="window.open('${img.image_path}', '_blank')" />
+                                                                                                    ${img.description ? `<p class="text-xs text-muted-foreground">${img.description}</p>` : ''}
+                                                                                                `;
+                                                                                                imagesContainer.appendChild(imgDiv);
+                                                                                            });
+                                                                                            
+                                                                                            gallery.appendChild(header);
+                                                                                            gallery.appendChild(imagesContainer);
+                                                                                            modal.appendChild(gallery);
+                                                                                            document.body.appendChild(modal);
+                                                                                        }}
+                                                                                        className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors p-2 rounded hover:bg-muted w-full"
+                                                                                    >
+                                                                                        <ImageIcon className="h-4 w-4" />
+                                                                                        <span className="flex-1">Lihat Gambar</span>
+                                                                                    </button>
+                                                                                </>
+                                                                            )}
                                                                         </div>
                                                                     </PopoverContent>
                                                                 </Popover>
@@ -529,27 +535,83 @@ export default function Notulensi({ notulensiLinks = [], activeDisasterName }: N
                                                                         year: 'numeric',
                                                                     })}
                                                                 </div>
-                                                                <div className="space-y-2">
+                                                                <div className="space-y-3">
                                                                     {notulensiItems.map((item, itemIndex) => (
-                                                                        <div key={itemIndex} className="border-b border-border pb-2 last:border-b-0 last:pb-0">
-                                                                            <div className="font-medium text-sm mb-1.5">
-                                                                                {item.link_title && (
-                                                                                    <div className="text-muted-foreground text-xs mb-1">
-                                                                                        {item.link_title}
+                                                                        <div key={itemIndex} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
+                                                                            {item.type === 'spreadsheet' ? (
+                                                                                <>
+                                                                                    <div className="font-medium text-sm mb-1.5">
+                                                                                        {item.link_title && (
+                                                                                            <div className="text-muted-foreground text-xs mb-1">
+                                                                                                {item.link_title}
+                                                                                            </div>
+                                                                                        )}
+                                                                                        📊 Notulensi Spreadsheet
+                                                                                        {item.tab_name && ` - ${item.tab_name}`}
                                                                                     </div>
-                                                                                )}
-                                                                                Notulensi {item.tab_name}
-                                                                            </div>
-                                                                            <a
-                                                                                href={item.sheet_link || '#'}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors p-1.5 rounded hover:bg-muted"
-                                                                            >
-                                                                                <FileText className="h-3 w-3" />
-                                                                                <span className="flex-1">Buka Notulensi</span>
-                                                                                <ExternalLink className="h-3 w-3" />
-                                                                            </a>
+                                                                                    <a
+                                                                                        href={item.sheet_link || '#'}
+                                                                                        target="_blank"
+                                                                                        rel="noopener noreferrer"
+                                                                                        className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors p-1.5 rounded hover:bg-muted"
+                                                                                    >
+                                                                                        <FileText className="h-3 w-3" />
+                                                                                        <span className="flex-1">Buka Spreadsheet</span>
+                                                                                        <ExternalLink className="h-3 w-3" />
+                                                                                    </a>
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <div className="font-medium text-sm mb-1.5">
+                                                                                        🖼️ Notulensi Gambar
+                                                                                        {item.count && item.count > 1 && ` (${item.count} gambar)`}
+                                                                                    </div>
+                                                                                    <button
+                                                                                        onClick={() => {
+                                                                                            // Open image gallery modal
+                                                                                            const modal = document.createElement('div');
+                                                                                            modal.className = 'fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4';
+                                                                                            modal.onclick = (e) => {
+                                                                                                if (e.target === modal) {
+                                                                                                    document.body.removeChild(modal);
+                                                                                                }
+                                                                                            };
+                                                                                            
+                                                                                            const gallery = document.createElement('div');
+                                                                                            gallery.className = 'max-w-4xl max-h-[90vh] overflow-auto bg-background rounded-lg p-4';
+                                                                                            
+                                                                                            const header = document.createElement('div');
+                                                                                            header.className = 'flex justify-between items-center mb-4';
+                                                                                            header.innerHTML = `
+                                                                                                <h3 class="text-lg font-semibold">Notulensi Gambar - ${date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</h3>
+                                                                                                <button class="text-muted-foreground hover:text-foreground" onclick="this.closest('.fixed').remove()">✕</button>
+                                                                                            `;
+                                                                                            
+                                                                                            const imagesContainer = document.createElement('div');
+                                                                                            imagesContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+                                                                                            
+                                                                                            item.images?.forEach((img, imgIndex) => {
+                                                                                                const imgDiv = document.createElement('div');
+                                                                                                imgDiv.className = 'space-y-2';
+                                                                                                imgDiv.innerHTML = `
+                                                                                                    <img src="${img.image_path}" alt="${img.image_name}" class="w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity" onclick="window.open('${img.image_path}', '_blank')" />
+                                                                                                    ${img.description ? `<p class="text-xs text-muted-foreground">${img.description}</p>` : ''}
+                                                                                                `;
+                                                                                                imagesContainer.appendChild(imgDiv);
+                                                                                            });
+                                                                                            
+                                                                                            gallery.appendChild(header);
+                                                                                            gallery.appendChild(imagesContainer);
+                                                                                            modal.appendChild(gallery);
+                                                                                            document.body.appendChild(modal);
+                                                                                        }}
+                                                                                        className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors p-1.5 rounded hover:bg-muted w-full"
+                                                                                    >
+                                                                                        <ImageIcon className="h-3 w-3" />
+                                                                                        <span className="flex-1">Lihat Gambar</span>
+                                                                                    </button>
+                                                                                </>
+                                                                            )}
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -565,7 +627,43 @@ export default function Notulensi({ notulensiLinks = [], activeDisasterName }: N
                         </div>
                     )}
                 </div>
-                <AppFooter />
+
+                {/* Partners / Didukung Oleh */}
+                <section className="py-12 border-t border-border bg-background mt-auto">
+                    <div className="container mx-auto px-4 text-center">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-8">Didukung Oleh</h3>
+
+                        <div className="overflow-hidden relative w-full group">
+                            <div className="flex animate-scroll hover:pause-scroll gap-12 items-center w-max">
+                                {[...partners, ...partners, ...partners].map((logo, index) => (
+                                    <div
+                                        key={`${logo.name}-${index}`}
+                                        className="flex items-center justify-center h-16 w-32 flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100"
+                                    >
+                                        <img
+                                            src={logo.image}
+                                            alt={logo.name}
+                                            className="max-h-full max-w-full object-contain drop-shadow-sm"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Gradient Masks for carousel */}
+                            <div className="absolute top-0 left-0 h-full w-24 bg-gradient-to-r from-background to-transparent pointer-events-none"></div>
+                            <div className="absolute top-0 right-0 h-full w-24 bg-gradient-to-l from-background to-transparent pointer-events-none"></div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Footer */}
+                <footer className="py-8 bg-card border-t border-border">
+                    <div className="container mx-auto px-4 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            Copyright © {new Date().getFullYear()} <span className="font-semibold text-primary">HEOC Kabupaten Agam</span>. All rights reserved.
+                        </p>
+                    </div>
+                </footer>
             </div>
         </>
     );
