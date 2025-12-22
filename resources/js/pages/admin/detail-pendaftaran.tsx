@@ -105,7 +105,7 @@ export default function DetailPendaftaran({ registration }: DetailPendaftaranPro
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Detail Pendaftaran - ${registration.nama_dmt}`} />
+            <Head title={`Detail Pendaftaran - ${registration.nama_dmt} - HEOC`} />
             <div className="space-y-6 p-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">

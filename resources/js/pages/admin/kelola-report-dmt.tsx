@@ -60,7 +60,7 @@ export default function KelolaReportDMT({ reports = [], success }: KelolaReportD
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Kelola Report DMT" />
+            <Head title="Kelola Report DMT - HEOC" />
             <div className="space-y-6 p-6">
                 <div className="flex items-center justify-between">
                     <div>

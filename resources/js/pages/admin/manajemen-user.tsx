@@ -54,7 +54,7 @@ export default function ManajemenUser({ users, success }: ManajemenUserProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Manajemen User" />
+            <Head title="Manajemen User - HEOC" />
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
                 {/* Success Message */}
                 {success && (

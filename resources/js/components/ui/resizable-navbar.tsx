@@ -68,9 +68,9 @@ export const Navbar = ({ children, className }: NavbarProps) => {
             {React.Children.map(children, (child) =>
                 React.isValidElement(child)
                     ? React.cloneElement(
-                          child as React.ReactElement<{ visible?: boolean }>,
-                          { visible },
-                      )
+                        child as React.ReactElement<{ visible?: boolean }>,
+                        { visible },
+                    )
                     : child,
             )}
         </motion.div>
@@ -131,27 +131,27 @@ export const NavItems = ({
             {items.map((item, idx) => {
                 const isActive = currentPath === item.link || (item.link !== '/' && currentPath.startsWith(item.link));
                 return (
-                <a
-                    onMouseEnter={() => setHovered(idx)}
-                    onClick={onItemClick}
+                    <a
+                        onMouseEnter={() => setHovered(idx)}
+                        onClick={onItemClick}
                         className={cn(
                             "relative px-4 py-2 transition-colors",
                             isActive ? "text-primary font-semibold" : "text-neutral-600"
                         )}
-                    key={`link-${idx}`}
-                    href={item.link}
-                >
+                        key={`link-${idx}`}
+                        href={item.link}
+                    >
                         {(hovered === idx || isActive) && (
-                        <motion.div
-                            layoutId="hovered"
+                            <motion.div
+                                layoutId="hovered"
                                 className={cn(
                                     "absolute inset-0 h-full w-full rounded-full",
                                     isActive ? "bg-primary/10" : "bg-gray-100"
                                 )}
-                        />
-                    )}
-                    <span className="relative z-20">{item.name}</span>
-                </a>
+                            />
+                        )}
+                        <span className="relative z-20">{item.name}</span>
+                    </a>
                 );
             })}
         </motion.div>
@@ -258,7 +258,7 @@ export const NavbarLogo = () => {
             href="/"
             className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
         >
-            <span className="font-bold text-xl text-primary">PKDMT</span>
+            <span className="font-bold text-xl text-primary">HEOC</span>
         </a>
     );
 };
@@ -277,9 +277,9 @@ export const NavbarButton = ({
     className?: string;
     variant?: 'primary' | 'secondary' | 'dark' | 'gradient';
 } & (
-    | React.ComponentPropsWithoutRef<'a'>
-    | React.ComponentPropsWithoutRef<'button'>
-)) => {
+        | React.ComponentPropsWithoutRef<'a'>
+        | React.ComponentPropsWithoutRef<'button'>
+    )) => {
     const baseStyles =
         'px-4 py-2 rounded-md bg-white text-black text-sm font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center';
 

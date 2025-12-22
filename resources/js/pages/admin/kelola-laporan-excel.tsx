@@ -52,7 +52,7 @@ export default function KelolaLaporanExcel({ excelFile, success, error }: Kelola
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Kelola File Excel Laporan" />
+            <Head title="Kelola File Excel Laporan - HEOC" />
             <div className="space-y-6 p-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Kelola File Excel Laporan</h1>
@@ -86,19 +86,19 @@ export default function KelolaLaporanExcel({ excelFile, success, error }: Kelola
                                 e.preventDefault();
                                 const form = e.currentTarget;
                                 const fileInput = form.querySelector('input[type="file"]') as HTMLInputElement;
-                                
+
                                 if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
                                     alert('Silakan pilih file terlebih dahulu.');
                                     return;
                                 }
-                                
+
                                 const formData = new FormData();
                                 formData.append('excel_file', fileInput.files[0]);
-                                
+
                                 console.log('Uploading file:', fileInput.files[0].name);
                                 console.log('File size:', fileInput.files[0].size);
                                 console.log('File type:', fileInput.files[0].type);
-                                
+
                                 setUploading(true);
                                 router.post('/laporan-excel', formData, {
                                     forceFormData: true,

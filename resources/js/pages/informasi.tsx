@@ -133,7 +133,7 @@ function getStatusBadgeStyle(status: string | null): { variant: 'default' | 'sec
     }
 
     const statusLower = status.toLowerCase().trim();
-    
+
     // Map status to different colors
     if (statusLower === 'aktif') {
         return { variant: 'default', className: 'bg-green-500 hover:bg-green-600 text-white' };
@@ -438,25 +438,25 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
         // Start with current URL params to preserve page and other params
         const currentParams = new URLSearchParams(window.location.search);
         const params = new URLSearchParams();
-        
+
         // Preserve page parameter if not resetting
         if (!resetPage && currentParams.has('page')) {
             params.set('page', currentParams.get('page')!);
         }
-        
+
         // Set filter parameters
         if (search.trim()) {
             params.set('search', search.trim());
         }
-        
+
         if (status && status !== 'all') {
             params.set('status', status);
         }
-        
+
         if (sortBy && sortBy !== 'tanggal_kedatangan') {
             params.set('sort_by', sortBy);
         }
-        
+
         if (sortOrder && sortOrder !== 'desc') {
             params.set('sort_order', sortOrder);
         }
@@ -468,17 +468,17 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
         const currentPath = window.location.pathname;
         const currentSearch = window.location.search;
         const currentUrl = currentPath + currentSearch;
-        
+
         // Only navigate if filter parameters actually changed (ignore page param)
         const currentParamsWithoutPage = new URLSearchParams(currentSearch);
         const newParamsWithoutPage = new URLSearchParams(queryString);
         currentParamsWithoutPage.delete('page');
         newParamsWithoutPage.delete('page');
-        
+
         // Compare filter params only (not page)
         const currentFilterString = currentParamsWithoutPage.toString();
         const newFilterString = newParamsWithoutPage.toString();
-        
+
         // Only navigate if filter params changed
         if (currentFilterString !== newFilterString) {
             router.get(newUrl, {}, {
@@ -501,8 +501,8 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
         }
 
         // Only update if filters actually changed (not just on re-render from pagination)
-        const filtersChanged = 
-            prevFiltersRef.current.search !== searchQuery || 
+        const filtersChanged =
+            prevFiltersRef.current.search !== searchQuery ||
             prevFiltersRef.current.status !== statusFilter ||
             prevFiltersRef.current.sortBy !== sortBy ||
             prevFiltersRef.current.sortOrder !== sortOrder;
@@ -524,7 +524,7 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
             updateFilters(searchQuery, statusFilter, sortBy, sortOrder, true);
         }
     }, [searchQuery, statusFilter, sortBy, sortOrder]);
-    
+
     const handleSort = (column: string) => {
         if (sortBy === column) {
             // Toggle sort order
@@ -535,12 +535,12 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
             setSortOrder('desc');
         }
     };
-    
+
     const getSortIcon = (column: string) => {
         if (sortBy !== column) {
             return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
         }
-        return sortOrder === 'asc' 
+        return sortOrder === 'asc'
             ? <ArrowUp className="h-4 w-4 ml-1" />
             : <ArrowDown className="h-4 w-4 ml-1" />;
     };
@@ -551,7 +551,7 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
 
     return (
         <>
-            <Head title="Informasi DMT - PKDMT" />
+            <Head title="Informasi DMT - HEOC" />
             <div className="min-h-screen bg-background flex flex-col">
                 <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 flex-1">
                     <div className="mb-6">
@@ -667,8 +667,8 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
                                             <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
                                             <YAxis />
                                             <Tooltip
-                                                formatter={(value: number, name: string, props: any) => [
-                                                    `${value} ${props.payload.unit}`,
+                                                formatter={(value: number | undefined, name: any, props: any) => [
+                                                    `${value || 0} ${props.payload.unit}`,
                                                     props.payload.name,
                                                 ]}
                                             />
@@ -707,7 +707,7 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
                                             <YAxis />
-                                            <Tooltip formatter={(value: number) => [`${value} orang`, 'Jumlah']} />
+                                            <Tooltip formatter={(value: number | undefined) => [`${value || 0} orang`, 'Jumlah']} />
                                             <Bar dataKey="value" fill="#22c55e" radius={[8, 8, 0, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -735,16 +735,16 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
                                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis 
-                                            dataKey="name" 
-                                            angle={-45} 
-                                            textAnchor="end" 
+                                        <XAxis
+                                            dataKey="name"
+                                            angle={-45}
+                                            textAnchor="end"
                                             height={100}
                                             interval={0}
                                         />
                                         <YAxis />
-                                        <Tooltip 
-                                            formatter={(value: number) => [`${value} tim`, 'Jumlah Tim']} 
+                                        <Tooltip
+                                            formatter={(value: number | undefined) => [`${value || 0} tim`, 'Jumlah Tim']}
                                         />
                                         <Bar dataKey="count" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
                                     </BarChart>

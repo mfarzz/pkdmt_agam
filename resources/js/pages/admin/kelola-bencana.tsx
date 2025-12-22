@@ -97,7 +97,7 @@ export default function KelolaBencana({ disasters, success, error }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Kelola Bencana" />
+            <Head title="Kelola Bencana - HEOC" />
 
             <div className="flex flex-col gap-6 p-6">
                 <div className="flex items-center justify-between">

@@ -4,7 +4,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import ReactDOMServer from 'react-dom/server';
 import { ToastProvider } from './contexts/toast-context';
 
-const appName = import.meta.env.VITE_APP_NAME || 'PKDMT';
+const appName = import.meta.env.VITE_APP_NAME || 'HEOC';
 
 createServer((page) =>
     createInertiaApp({

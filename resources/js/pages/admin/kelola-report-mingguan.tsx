@@ -107,7 +107,7 @@ export default function KelolaReportMingguan({ weeklyReports = [], success }: Ke
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Kelola Report Mingguan" />
+            <Head title="Kelola Report Mingguan - HEOC" />
             <div className="space-y-6 p-6">
                 <div className="flex items-center justify-between">
                     <div>

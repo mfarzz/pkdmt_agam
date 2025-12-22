@@ -86,7 +86,7 @@ export default function Infografis({ infografis, activeDisasterName }: Infografi
 
     return (
         <>
-            <Head title="Informasi Umum - PKDMT" />
+            <Head title="Informasi Umum - HEOC" />
             <div className="min-h-screen bg-background flex flex-col">
                 <div className="container mx-auto px-4 py-4 md:py-8 flex-1">
                     {/* Header */}

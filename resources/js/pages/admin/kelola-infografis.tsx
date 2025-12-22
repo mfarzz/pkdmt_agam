@@ -142,7 +142,7 @@ export default function KelolaInfografis({ infografisLink, infografis, success, 
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Kelola Infografis" />
+            <Head title="Kelola Infografis - HEOC" />
             <div className="space-y-6 p-6">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Kelola Infografis</h1>
@@ -265,119 +265,118 @@ export default function KelolaInfografis({ infografisLink, infografis, success, 
                             </div>
                         ) : (
                             <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {infografisData.map((item) => {
-                                    const isPdf = item.mime_type === 'application/pdf';
-                                    return (
-                                    <div
-                                        key={item.id}
-                                        className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-                                    >
-                                        <div className="aspect-video bg-muted relative">
-                                                {isPdf ? (
-                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
-                                                        <div className="text-center p-4">
-                                                            <svg className="w-16 h-16 mx-auto text-red-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                                                            </svg>
-                                                            <p className="text-xs text-muted-foreground font-medium">PDF</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {infografisData.map((item) => {
+                                        const isPdf = item.mime_type === 'application/pdf';
+                                        return (
+                                            <div
+                                                key={item.id}
+                                                className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                                            >
+                                                <div className="aspect-video bg-muted relative">
+                                                    {isPdf ? (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
+                                                            <div className="text-center p-4">
+                                                                <svg className="w-16 h-16 mx-auto text-red-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                                                                </svg>
+                                                                <p className="text-xs text-muted-foreground font-medium">PDF</p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ) : (
-                                            <img
-                                                src={`/infografis/${item.id}/image`}
-                                                alt={item.file_name}
-                                                className="w-full h-full object-contain"
-                                                loading="lazy"
-                                                crossOrigin="anonymous"
-                                                referrerPolicy="no-referrer"
-                                                onError={(e) => {
-                                                            // Hide image if proxy fails to avoid CORS issues
-                                                    const target = e.target as HTMLImageElement;
-                                                            target.style.display = 'none';
-                                                }}
-                                            />
-                                                )}
-                                        </div>
-                                        <div className="p-3">
-                                            <p className="text-sm font-medium truncate" title={item.file_name}>
-                                                {item.file_name}
-                                            </p>
-                                            {item.file_size && (
-                                                <p className="text-xs text-muted-foreground mt-1">
-                                                    {(item.file_size / 1024).toFixed(2)} KB
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    );
-                                })}
-                            </div>
+                                                    ) : (
+                                                        <img
+                                                            src={`/infografis/${item.id}/image`}
+                                                            alt={item.file_name}
+                                                            className="w-full h-full object-contain"
+                                                            loading="lazy"
+                                                            crossOrigin="anonymous"
+                                                            referrerPolicy="no-referrer"
+                                                            onError={(e) => {
+                                                                // Hide image if proxy fails to avoid CORS issues
+                                                                const target = e.target as HTMLImageElement;
+                                                                target.style.display = 'none';
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div className="p-3">
+                                                    <p className="text-sm font-medium truncate" title={item.file_name}>
+                                                        {item.file_name}
+                                                    </p>
+                                                    {item.file_size && (
+                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                            {(item.file_size / 1024).toFixed(2)} KB
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
 
-                            {/* Pagination */}
-                            {infografis && infografis.last_page > 1 && (
-                                <div className="mt-6 flex items-center justify-center gap-2">
-                                    {/* Previous Button */}
-                                    {infografis.current_page > 1 && paginationLinks[0]?.url && (
-                                        <Link
-                                            href={paginationLinks[0].url}
-                                            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
-                                        >
-                                            <ChevronLeft className="h-4 w-4 mr-1" />
-                                            Sebelumnya
-                                        </Link>
-                                    )}
+                                {/* Pagination */}
+                                {infografis && infografis.last_page > 1 && (
+                                    <div className="mt-6 flex items-center justify-center gap-2">
+                                        {/* Previous Button */}
+                                        {infografis.current_page > 1 && paginationLinks[0]?.url && (
+                                            <Link
+                                                href={paginationLinks[0].url}
+                                                className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+                                            >
+                                                <ChevronLeft className="h-4 w-4 mr-1" />
+                                                Sebelumnya
+                                            </Link>
+                                        )}
 
-                                    {/* Page Numbers */}
-                                    <div className="flex items-center gap-1">
-                                        {paginationLinks.slice(1, -1).map((link, index) => {
-                                            if (!link.url) {
+                                        {/* Page Numbers */}
+                                        <div className="flex items-center gap-1">
+                                            {paginationLinks.slice(1, -1).map((link, index) => {
+                                                if (!link.url) {
+                                                    return (
+                                                        <span
+                                                            key={`ellipsis-${index}`}
+                                                            className="px-3 py-2 text-sm text-muted-foreground"
+                                                        >
+                                                            {link.label}
+                                                        </span>
+                                                    );
+                                                }
+
                                                 return (
-                                                    <span
-                                                        key={`ellipsis-${index}`}
-                                                        className="px-3 py-2 text-sm text-muted-foreground"
+                                                    <Link
+                                                        key={link.url}
+                                                        href={link.url}
+                                                        className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${link.active
+                                                                ? 'border-primary bg-primary text-primary-foreground'
+                                                                : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                                                            }`}
                                                     >
                                                         {link.label}
-                                                    </span>
+                                                    </Link>
                                                 );
-                                            }
+                                            })}
+                                        </div>
 
-                                            return (
-                                                <Link
-                                                    key={link.url}
-                                                    href={link.url}
-                                                    className={`inline-flex items-center justify-center rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                                                        link.active
-                                                            ? 'border-primary bg-primary text-primary-foreground'
-                                                            : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
-                                                    }`}
-                                                >
-                                                    {link.label}
-                                                </Link>
-                                            );
-                                        })}
+                                        {/* Next Button */}
+                                        {infografis.current_page < infografis.last_page && paginationLinks[paginationLinks.length - 1]?.url && (
+                                            <Link
+                                                href={paginationLinks[paginationLinks.length - 1].url as string}
+                                                className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
+                                            >
+                                                Selanjutnya
+                                                <ChevronRight className="h-4 w-4 ml-1" />
+                                            </Link>
+                                        )}
                                     </div>
+                                )}
 
-                                    {/* Next Button */}
-                                    {infografis.current_page < infografis.last_page && paginationLinks[paginationLinks.length - 1]?.url && (
-                                        <Link
-                                            href={paginationLinks[paginationLinks.length - 1].url as string}
-                                            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
-                                        >
-                                            Selanjutnya
-                                            <ChevronRight className="h-4 w-4 ml-1" />
-                                        </Link>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Pagination Info */}
-                            {infografis && (
-                                <div className="mt-4 text-center text-sm text-muted-foreground">
-                                    Menampilkan {((infografis.current_page - 1) * infografis.per_page) + 1} - {Math.min(infografis.current_page * infografis.per_page, infografis.total)} dari {infografis.total} infografis
-                                </div>
-                            )}
-                        </>
+                                {/* Pagination Info */}
+                                {infografis && (
+                                    <div className="mt-4 text-center text-sm text-muted-foreground">
+                                        Menampilkan {((infografis.current_page - 1) * infografis.per_page) + 1} - {Math.min(infografis.current_page * infografis.per_page, infografis.total)} dari {infografis.total} infografis
+                                    </div>
+                                )}
+                            </>
                         )}
                     </CardContent>
                 </Card>

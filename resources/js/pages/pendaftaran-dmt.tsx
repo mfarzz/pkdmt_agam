@@ -528,7 +528,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
 
     return (
         <>
-            <Head title="Pendaftaran DMT - PKDMT" />
+            <Head title="Pendaftaran DMT - HEOC" />
             <div className="min-h-screen bg-background flex flex-col">
                 <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 flex-1">
                     <div className="max-w-4xl mx-auto">
@@ -587,10 +587,10 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                         >
                                             <div
                                                 className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${isActive
-                                                        ? 'border-primary bg-primary text-primary-foreground'
-                                                        : isCompleted
-                                                            ? 'border-green-600 bg-green-600 text-white'
-                                                            : 'border-muted-foreground bg-background'
+                                                    ? 'border-primary bg-primary text-primary-foreground'
+                                                    : isCompleted
+                                                        ? 'border-green-600 bg-green-600 text-white'
+                                                        : 'border-muted-foreground bg-background'
                                                     }`}
                                             >
                                                 <StepIcon className="h-5 w-5" />

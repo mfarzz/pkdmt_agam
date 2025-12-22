@@ -65,7 +65,7 @@ export default function KelolaNotulensi({ links = [], uploadedImages = [], succe
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingLink, setEditingLink] = useState<NotulensiLink | null>(null);
     const [formData, setFormData] = useState({ title: '', gdrive_url: '' });
-    
+
     // Image upload state
     const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
     const [imageDate, setImageDate] = useState('');
@@ -73,7 +73,7 @@ export default function KelolaNotulensi({ links = [], uploadedImages = [], succe
     const [imageDescriptions, setImageDescriptions] = useState<string[]>([]);
     const [uploadingImages, setUploadingImages] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
+
     // Image preview state
     const [previewImageGroup, setPreviewImageGroup] = useState<UploadedImageGroup | null>(null);
     const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
@@ -185,13 +185,13 @@ export default function KelolaNotulensi({ links = [], uploadedImages = [], succe
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Kelola Notulensi" />
+            <Head title="Kelola Notulensi - HEOC" />
             <div className="space-y-6 p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">Kelola Notulensi</h1>
                         <p className="text-muted-foreground mt-2">
-                            Kelola link Google Sheet untuk menyimpan notulensi. Setiap tab dengan format tanggal (contoh: "11 Des 2025") akan otomatis terdeteksi.
+                            Kelola link Google Sheet untuk menyimpan notulensi. Setiap tab dengan format tanggal (contoh: "2025-12-10") akan otomatis terdeteksi.
                         </p>
                     </div>
                     <div className="flex gap-2">
