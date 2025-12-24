@@ -39,12 +39,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Routes accessible by both Admin and Superadmin
     Route::middleware(['role:admin,superadmin'])->group(function () {
         Route::get('dashboard', [App\Http\Controllers\UserController::class, 'index'])->name('dashboard');
-        
+
         // Separate report management pages
         Route::get('kelola-report-mingguan', [App\Http\Controllers\RekapController::class, 'indexMingguan'])->name('kelola-report-mingguan');
         Route::get('kelola-report-dmt', [App\Http\Controllers\RekapController::class, 'indexDMT'])->name('kelola-report-dmt');
         Route::get('kelola-report-heoc', [App\Http\Controllers\RekapController::class, 'indexHEOC'])->name('kelola-report-heoc');
-        
+
         Route::post('report-weeks/upload', [App\Http\Controllers\RekapController::class, 'uploadWeeklyReport'])->name('report-weeks.upload');
         Route::delete('report-weeks/{reportWeek}', [App\Http\Controllers\RekapController::class, 'deleteWeeklyReport'])->name('report-weeks.delete');
 
@@ -90,6 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('kelola-pendaftaran/{dmtData}', [App\Http\Controllers\DmtPendaftaranController::class, 'show'])->name('kelola-pendaftaran.show');
         Route::put('kelola-pendaftaran/{dmtData}/status', [App\Http\Controllers\DmtPendaftaranController::class, 'updateStatus'])->name('kelola-pendaftaran.update-status');
         Route::delete('kelola-pendaftaran/{dmtData}', [App\Http\Controllers\DmtPendaftaranController::class, 'destroy'])->name('kelola-pendaftaran.destroy');
+        Route::post('kelola-pendaftaran/sync', [App\Http\Controllers\DmtPendaftaranController::class, 'sync'])->name('kelola-pendaftaran.sync');
 
         Route::get('kelola-bencana', [App\Http\Controllers\DisasterController::class, 'index'])->name('kelola-bencana');
         Route::post('disasters', [App\Http\Controllers\DisasterController::class, 'store'])->name('disasters.store');

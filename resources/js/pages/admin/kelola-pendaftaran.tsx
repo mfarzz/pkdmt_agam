@@ -1,11 +1,6 @@
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, CheckCircle2, XCircle, Trash2, ChevronLeft, ChevronRight, Download } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -14,12 +9,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -28,8 +17,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { usePage } from '@inertiajs/react';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, ChevronLeft, ChevronRight, Download, Eye, RefreshCw, Search, Trash2, XCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -78,6 +75,7 @@ interface PaginatedRegistrations {
 interface KelolaPendaftaranProps {
     registrations: PaginatedRegistrations;
     success?: string;
+    error?: string;
 }
 
 // Helper function to get badge variant/color based on status (same as informasi.tsx)
@@ -120,12 +118,17 @@ function getStatusBadge(status: string | null, statusPendaftaran?: string) {
     );
 }
 
-export default function KelolaPendaftaran({ registrations, success }: KelolaPendaftaranProps) {
+export default function KelolaPendaftaran({ registrations, success, error }: KelolaPendaftaranProps) {
     const { url } = usePage();
     const urlParams = new URLSearchParams(url.split('?')[1] || '');
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [registrationToDelete, setRegistrationToDelete] = useState<Registration | null>(null);
+
+    // Sync dialog state
+    const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+    const [spreadsheetUrl, setSpreadsheetUrl] = useState('');
+    const [isSyncing, setIsSyncing] = useState(false);
 
     // Initialize filter states from URL params
     const [searchQuery, setSearchQuery] = useState(urlParams.get('search') || '');
@@ -326,6 +329,42 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
         window.open(url, '_blank');
     };
 
+    const handleSyncClick = () => {
+        setSpreadsheetUrl('');
+        setSyncDialogOpen(true);
+    };
+
+    const handleSync = () => {
+        if (!spreadsheetUrl.trim()) {
+            return;
+        }
+
+        setIsSyncing(true);
+        const queryParams = getCurrentQueryParams();
+        const queryString = queryParams.toString();
+        const redirectUrl = queryString ? `/kelola-pendaftaran?${queryString}` : '/kelola-pendaftaran';
+
+        router.post('/kelola-pendaftaran/sync', {
+            spreadsheet_url: spreadsheetUrl.trim(),
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsSyncing(false);
+                setSyncDialogOpen(false);
+                setSpreadsheetUrl('');
+                // Refresh the page to show updated data
+                router.get(redirectUrl, {}, {
+                    preserveState: true,
+                    preserveScroll: true,
+                });
+            },
+            onError: (errors) => {
+                setIsSyncing(false);
+                // Error will be shown via session flash message
+            },
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola Pendaftaran DMT - HEOC" />
@@ -337,15 +376,27 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
                             Kelola pendaftaran Disaster Medical Team yang masuk melalui form web
                         </p>
                     </div>
-                    <Button onClick={handleExport} variant="outline" className="gap-2">
-                        <Download className="h-4 w-4" />
-                        Export Excel
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button onClick={handleSyncClick} variant="outline" className="gap-2">
+                            <RefreshCw className="h-4 w-4" />
+                            Sinkronisasi
+                        </Button>
+                        <Button onClick={handleExport} variant="outline" className="gap-2">
+                            <Download className="h-4 w-4" />
+                            Export Excel
+                        </Button>
+                    </div>
                 </div>
 
                 {success && (
                     <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-sm font-medium text-green-700">
                         {success}
+                    </div>
+                )}
+
+                {error && (
+                    <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm font-medium text-red-700">
+                        {error}
                     </div>
                 )}
 
@@ -646,6 +697,65 @@ export default function KelolaPendaftaran({ registrations, success }: KelolaPend
                             </Button>
                             <Button variant="destructive" onClick={handleDeleteConfirm}>
                                 Hapus
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={syncDialogOpen} onOpenChange={setSyncDialogOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Sinkronisasi Data dari Google Spreadsheet</DialogTitle>
+                            <DialogDescription>
+                                Masukkan link Google Spreadsheet yang berisi data pendaftaran DMT dari Google Form.
+                                Data akan disinkronkan dengan database yang ada.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <label htmlFor="spreadsheet-url" className="text-sm font-medium">
+                                    Link Spreadsheet
+                                </label>
+                                <Input
+                                    id="spreadsheet-url"
+                                    type="url"
+                                    placeholder="https://docs.google.com/spreadsheets/d/..."
+                                    value={spreadsheetUrl}
+                                    onChange={(e) => setSpreadsheetUrl(e.target.value)}
+                                    disabled={isSyncing}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Pastikan spreadsheet sudah di-share dengan akses "Anyone with the link can view"
+                                </p>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setSyncDialogOpen(false);
+                                    setSpreadsheetUrl('');
+                                }}
+                                disabled={isSyncing}
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                onClick={handleSync}
+                                disabled={!spreadsheetUrl.trim() || isSyncing}
+                                className="gap-2"
+                            >
+                                {isSyncing ? (
+                                    <>
+                                        <RefreshCw className="h-4 w-4 animate-spin" />
+                                        Menyinkronkan...
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw className="h-4 w-4" />
+                                        Sinkronisasi
+                                    </>
+                                )}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
