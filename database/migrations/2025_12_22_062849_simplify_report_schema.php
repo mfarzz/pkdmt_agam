@@ -20,6 +20,13 @@ return new class extends Migration
         DB::table('report_weeks')->truncate();
 
         // 3. Modify report_dates table
+        $reportDateFks = collect(Schema::getForeignKeys('report_dates'))->pluck('name');
+        if ($reportDateFks->contains('report_dates_report_link_id_foreign')) {
+            Schema::table('report_dates', function (Blueprint $table) {
+                $table->dropForeign(['report_link_id']);
+            });
+        }
+
         Schema::table('report_dates', function (Blueprint $table) {
             if (Schema::hasColumn('report_dates', 'report_link_id')) {
                 $table->dropColumn('report_link_id');
@@ -33,6 +40,19 @@ return new class extends Migration
         });
 
         // 4. Modify report_weeks table
+        $reportWeekFks = collect(Schema::getForeignKeys('report_weeks'))->pluck('name');
+        if ($reportWeekFks->contains('report_weeks_report_link_id_foreign')) {
+            Schema::table('report_weeks', function (Blueprint $table) {
+                $table->dropForeign(['report_link_id']);
+            });
+        }
+
+        if (Schema::hasIndex('report_weeks', 'unique_week_report')) {
+            Schema::table('report_weeks', function (Blueprint $table) {
+                $table->dropUnique('unique_week_report');
+            });
+        }
+
         Schema::table('report_weeks', function (Blueprint $table) {
             if (Schema::hasColumn('report_weeks', 'report_link_id')) {
                 $table->dropColumn('report_link_id');

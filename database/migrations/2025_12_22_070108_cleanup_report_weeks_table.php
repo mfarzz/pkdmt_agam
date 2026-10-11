@@ -11,12 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('report_weeks', function (Blueprint $table) {
-            // Drop unique constraint if it exists
-            try {
-                $table->dropUnique('unique_week_report');
-            } catch (\Exception $e) {}
+        $reportWeekFks = collect(Schema::getForeignKeys('report_weeks'))->pluck('name');
+        if ($reportWeekFks->contains('report_weeks_report_link_id_foreign')) {
+            Schema::table('report_weeks', function (Blueprint $table) {
+                $table->dropForeign(['report_link_id']);
+            });
+        }
 
+        if (Schema::hasIndex('report_weeks', 'unique_week_report')) {
+            Schema::table('report_weeks', function (Blueprint $table) {
+                $table->dropUnique('unique_week_report');
+            });
+        }
+
+        Schema::table('report_weeks', function (Blueprint $table) {
             // Drop obsolete columns
             if (Schema::hasColumn('report_weeks', 'report_link_id')) {
                 $table->dropColumn('report_link_id');

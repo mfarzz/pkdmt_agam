@@ -107,7 +107,7 @@ export default function KelolaBencana({ disasters, success, error }: Props) {
                             Tambah, ubah, atau hapus data bencana. Bencana yang aktif akan ditampilkan di halaman publik.
                         </p>
                         <p className="text-sm text-amber-600 mt-2 font-medium">
-                            ⚠️ Ketika Anda mengubah bencana aktif, semua data yang ditampilkan di dashboard dan menu lainnya akan berubah sesuai dengan bencana yang dipilih.
+                            Ketika Anda mengubah bencana aktif, semua data yang ditampilkan di dashboard dan menu lainnya akan berubah sesuai dengan bencana yang dipilih.
                         </p>
                     </div>
                     <Button onClick={handleCreate}>

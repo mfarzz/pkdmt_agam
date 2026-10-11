@@ -151,7 +151,7 @@ export default function KelolaReportHEOC({ reports = [], success }: KelolaReport
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <h4 className="font-semibold mb-2 text-sm">📤 Upload Manual</h4>
+                                    <h4 className="font-semibold mb-2 text-sm">Upload Manual</h4>
                                     <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                                         <li>Klik "Upload Report Harian"</li>
                                         <li>Pilih tanggal dan upload file PDF (max 2MB)</li>
@@ -159,7 +159,7 @@ export default function KelolaReportHEOC({ reports = [], success }: KelolaReport
                                     </ul>
                                 </div>
                                 <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm text-blue-700">
-                                    <p className="font-medium mb-1 text-xs">💡 Tips:</p>
+                                    <p className="font-medium mb-1 text-xs">Tips:</p>
                                     <p className="text-[10px] leading-relaxed">
                                         Gunakan upload manual untuk report harian yang baru. Pastikan file dalam format PDF.
                                     </p>

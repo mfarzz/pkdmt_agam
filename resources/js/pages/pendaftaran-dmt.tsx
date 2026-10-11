@@ -3,9 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import InputError from '@/components/input-error';
+import TagInput from '@/components/tag-input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileText, Users, Package, Activity, Stethoscope, FileCheck, ChevronLeft, ChevronRight, X, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -89,6 +89,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
         }
         return 1;
     });
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [validationError, setValidationError] = useState<string>('');
     const [showSuccessModal, setShowSuccessModal] = useState<boolean>(!!success);
     const totalSteps = 6;
@@ -97,6 +98,14 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
     const suratTugasInputRef = useRef<HTMLInputElement>(null);
     const scanStrInputRef = useRef<HTMLInputElement>(null);
     const daftarNamaInputRef = useRef<HTMLInputElement>(null);
+
+    const getFieldError = (field: string): string | undefined => {
+        return fieldErrors[field] || (errors as Record<string, string>)[field];
+    };
+
+    const inputErrorClass = (field: string): string => {
+        return getFieldError(field) ? 'border-red-500 focus-visible:ring-red-500' : '';
+    };
 
     const steps = [
         { id: 1, title: 'Data Tim', icon: Users },
@@ -173,16 +182,43 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
         window.history.replaceState({}, '', currentUrl.toString());
     };
 
-    // Update URL and clear validation error when step changes
+    // Update URL and clear validation errors when step changes
     useEffect(() => {
         updateStepInUrl(currentStep);
-        // Clear validation error when step changes
-        // Using setTimeout to avoid cascading renders warning
+        // Clear validation errors when step changes
         const timer = setTimeout(() => {
+            setFieldErrors({});
             setValidationError('');
         }, 0);
         return () => clearTimeout(timer);
     }, [currentStep]);
+
+    // Automatically clear error for a field once user fills/fixes it
+    useEffect(() => {
+        setFieldErrors((prev) => {
+            if (Object.keys(prev).length === 0) return prev;
+            let changed = false;
+            const updated = { ...prev };
+            for (const key of Object.keys(updated)) {
+                const val = data[key as keyof typeof data];
+                if (key === 'email') {
+                    if (val && typeof val === 'string' && isValidEmail(val)) {
+                        delete updated[key];
+                        changed = true;
+                    }
+                } else if (key === 'jenis_layanan_tersedia') {
+                    if (Array.isArray(val) && val.length > 0) {
+                        delete updated[key];
+                        changed = true;
+                    }
+                } else if (val !== null && val !== undefined && val !== '') {
+                    delete updated[key];
+                    changed = true;
+                }
+            }
+            return changed ? updated : prev;
+        });
+    }, [data]);
 
     // Show success modal when success prop is available
     useEffect(() => {
@@ -293,181 +329,145 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
         return emailRegex.test(email.trim());
     };
 
-    // Validation for current step
-    const validateStep = (step: number): boolean => {
+    // Validation for current step - returns field-specific errors
+    const validateStepFields = (step: number): Record<string, string> => {
+        const stepErrors: Record<string, string> = {};
+
         switch (step) {
             case 1: // Data Rincian Tim
-                return !!(
-                    data.nama_dmt &&
-                    data.nama_ketua_tim &&
-                    data.tanggal_kedatangan &&
-                    data.masa_penugasan_hari &&
-                    data.tanggal_pelayanan_dimulai
-                );
-            case 2: // Nara Hubung
-                return !!(
-                    data.nama_nara_hubung &&
-                    data.nama_nara_hubung.trim() !== '' &&
-                    data.posisi_jabatan &&
-                    data.posisi_jabatan.trim() !== '' &&
-                    data.email &&
-                    data.email.trim() !== '' &&
-                    isValidEmail(data.email) &&
-                    data.nomor_hp &&
-                    data.nomor_hp.trim() !== ''
-                );
-            case 3: // Kapasitas Logistik
-                return !!(
-                    data.logistik_non_medis &&
-                    data.logistik_medis
-                );
-            case 4: // Kapasitas Layanan
-                return !!(
-                    data.kapasitas_rawat_jalan &&
-                    data.kapasitas_rawat_jalan.trim() !== '' &&
-                    data.kapasitas_rawat_inap &&
-                    data.kapasitas_rawat_inap.trim() !== '' &&
-                    data.kapasitas_operasi_bedah_mayor &&
-                    data.kapasitas_operasi_bedah_mayor.trim() !== '' &&
-                    data.kapasitas_operasi_bedah_minor &&
-                    data.kapasitas_operasi_bedah_minor.trim() !== '' &&
-                    data.jenis_layanan_tersedia.length > 0
-                );
-            case 5: // Komposisi Anggota Tim
-                return !!(
-                    data.jumlah_dokter_umum &&
-                    data.jumlah_dokter_umum.trim() !== '' &&
-                    data.rincian_dokter_spesialis &&
-                    data.rincian_dokter_spesialis.trim() !== '' &&
-                    data.jumlah_perawat &&
-                    data.jumlah_perawat.trim() !== '' &&
-                    data.jumlah_bidan &&
-                    data.jumlah_bidan.trim() !== '' &&
-                    data.jumlah_apoteker &&
-                    data.jumlah_apoteker.trim() !== '' &&
-                    data.jumlah_psikolog &&
-                    data.jumlah_psikolog.trim() !== '' &&
-                    data.jumlah_staf_logistik &&
-                    data.jumlah_staf_logistik.trim() !== '' &&
-                    data.jumlah_staf_administrasi &&
-                    data.jumlah_staf_administrasi.trim() !== '' &&
-                    data.jumlah_petugas_keamanan &&
-                    data.jumlah_petugas_keamanan.trim() !== ''
-                );
-            case 6: // Lampiran Dokumen
-                return !!(
-                    data.surat_tugas_file &&
-                    data.scan_str_file
-                );
-            default:
-                return false;
-        }
-    };
+                if (!data.nama_dmt || data.nama_dmt.trim() === '') {
+                    stepErrors.nama_dmt = 'Nama DMT wajib diisi';
+                }
+                if (!data.nama_ketua_tim || data.nama_ketua_tim.trim() === '') {
+                    stepErrors.nama_ketua_tim = 'Nama ketua tim wajib diisi';
+                }
+                if (!data.tanggal_kedatangan) {
+                    stepErrors.tanggal_kedatangan = 'Tanggal kedatangan wajib diisi';
+                }
+                if (!data.masa_penugasan_hari || String(data.masa_penugasan_hari).trim() === '') {
+                    stepErrors.masa_penugasan_hari = 'Masa penugasan wajib diisi';
+                }
+                if (!data.tanggal_pelayanan_dimulai) {
+                    stepErrors.tanggal_pelayanan_dimulai = 'Tanggal pelayanan dimulai wajib diisi';
+                }
+                break;
 
-    // Get validation error message for current step
-    const getValidationErrorMessage = (step: number): string => {
-        switch (step) {
-            case 1: { // Data Rincian Tim
-                const missingFields1: string[] = [];
-                if (!data.nama_dmt) missingFields1.push('Nama DMT');
-                if (!data.nama_ketua_tim) missingFields1.push('Nama Ketua Tim');
-                if (!data.tanggal_kedatangan) missingFields1.push('Tanggal Kedatangan');
-                if (!data.masa_penugasan_hari) missingFields1.push('Masa Penugasan');
-                if (!data.tanggal_pelayanan_dimulai) missingFields1.push('Tanggal Pelayanan Dimulai');
-                return missingFields1.length > 0
-                    ? `Mohon lengkapi field berikut: ${missingFields1.join(', ')}`
-                    : '';
-            }
-            case 2: { // Nara Hubung
-                const missingFields2: string[] = [];
+            case 2: // Nara Hubung
                 if (!data.nama_nara_hubung || data.nama_nara_hubung.trim() === '') {
-                    missingFields2.push('Nama Nara Hubung');
+                    stepErrors.nama_nara_hubung = 'Nama nara hubung wajib diisi';
                 }
                 if (!data.posisi_jabatan || data.posisi_jabatan.trim() === '') {
-                    missingFields2.push('Posisi / Jabatan');
+                    stepErrors.posisi_jabatan = 'Posisi / jabatan wajib diisi';
                 }
                 if (!data.email || data.email.trim() === '') {
-                    missingFields2.push('Alamat Email');
+                    stepErrors.email = 'Alamat email wajib diisi';
                 } else if (!isValidEmail(data.email)) {
-                    return 'Format alamat email tidak valid. Contoh format yang benar: nama@example.com';
+                    stepErrors.email = 'Format alamat email tidak valid (contoh: nama@example.com)';
                 }
                 if (!data.nomor_hp || data.nomor_hp.trim() === '') {
-                    missingFields2.push('Nomor HP / WhatsApp');
+                    stepErrors.nomor_hp = 'Nomor HP / WhatsApp wajib diisi';
                 }
-                return missingFields2.length > 0
-                    ? `Mohon lengkapi field berikut: ${missingFields2.join(', ')}`
-                    : '';
-            }
-            case 3: { // Kapasitas Logistik
-                const missingFields3: string[] = [];
-                if (!data.logistik_non_medis) missingFields3.push('Logistik Non Medis');
-                if (!data.logistik_medis) missingFields3.push('Logistik Medis');
-                return missingFields3.length > 0
-                    ? `Mohon lengkapi field berikut: ${missingFields3.join(', ')}`
-                    : '';
-            }
-            case 4: { // Kapasitas Layanan
-                const missingFields4: string[] = [];
-                if (!data.kapasitas_rawat_jalan) missingFields4.push('Kapasitas Rawat Jalan');
-                if (!data.kapasitas_rawat_inap) missingFields4.push('Kapasitas Rawat Inap');
-                if (!data.kapasitas_operasi_bedah_mayor) missingFields4.push('Kapasitas Operasi Bedah Mayor');
-                if (!data.kapasitas_operasi_bedah_minor) missingFields4.push('Kapasitas Operasi Bedah Minor');
-                if (data.jenis_layanan_tersedia.length === 0) missingFields4.push('Jenis Layanan yang Tersedia');
-                return missingFields4.length > 0
-                    ? `Mohon lengkapi field berikut: ${missingFields4.join(', ')}`
-                    : '';
-            }
-            case 5: { // Komposisi Anggota Tim
-                const missingFields5: string[] = [];
-                if (!data.jumlah_dokter_umum) missingFields5.push('Jumlah Dokter Umum');
-                if (!data.rincian_dokter_spesialis) missingFields5.push('Rincian Dokter Spesialis');
-                if (!data.jumlah_perawat) missingFields5.push('Jumlah Perawat');
-                if (!data.jumlah_bidan) missingFields5.push('Jumlah Bidan');
-                if (!data.jumlah_apoteker) missingFields5.push('Jumlah Apoteker');
-                if (!data.jumlah_psikolog) missingFields5.push('Jumlah Psikolog');
-                if (!data.jumlah_staf_logistik) missingFields5.push('Jumlah Staf Logistik');
-                if (!data.jumlah_staf_administrasi) missingFields5.push('Jumlah Staf Administrasi');
-                if (!data.jumlah_petugas_keamanan) missingFields5.push('Jumlah Petugas Keamanan');
-                return missingFields5.length > 0
-                    ? `Mohon lengkapi field berikut: ${missingFields5.join(', ')}`
-                    : '';
-            }
-            case 6: { // Lampiran Dokumen
-                const missingFields6: string[] = [];
-                if (!data.surat_tugas_file) missingFields6.push('Surat Tugas');
-                if (!data.scan_str_file) missingFields6.push('Scan STR Anggota Tim');
-                return missingFields6.length > 0
-                    ? `Mohon lengkapi field berikut: ${missingFields6.join(', ')}`
-                    : '';
-            }
-            default:
-                return 'Mohon lengkapi semua field yang wajib diisi';
+                break;
+
+            case 3: // Kapasitas Logistik
+                if (!data.logistik_non_medis || data.logistik_non_medis.trim() === '') {
+                    stepErrors.logistik_non_medis = 'Logistik non medis wajib diisi';
+                }
+                if (!data.logistik_medis || data.logistik_medis.trim() === '') {
+                    stepErrors.logistik_medis = 'Logistik medis wajib diisi';
+                }
+                break;
+
+            case 4: // Kapasitas Layanan
+                if (!data.kapasitas_rawat_jalan || String(data.kapasitas_rawat_jalan).trim() === '') {
+                    stepErrors.kapasitas_rawat_jalan = 'Kapasitas rawat jalan wajib diisi';
+                }
+                if (!data.kapasitas_rawat_inap || String(data.kapasitas_rawat_inap).trim() === '') {
+                    stepErrors.kapasitas_rawat_inap = 'Kapasitas rawat inap wajib diisi';
+                }
+                if (!data.kapasitas_operasi_bedah_mayor || String(data.kapasitas_operasi_bedah_mayor).trim() === '') {
+                    stepErrors.kapasitas_operasi_bedah_mayor = 'Kapasitas operasi bedah mayor wajib diisi';
+                }
+                if (!data.kapasitas_operasi_bedah_minor || String(data.kapasitas_operasi_bedah_minor).trim() === '') {
+                    stepErrors.kapasitas_operasi_bedah_minor = 'Kapasitas operasi bedah minor wajib diisi';
+                }
+                if (!data.jenis_layanan_tersedia || data.jenis_layanan_tersedia.length === 0) {
+                    stepErrors.jenis_layanan_tersedia = 'Pilih minimal satu jenis layanan yang tersedia';
+                }
+                break;
+
+            case 5: // Komposisi Anggota Tim
+                if (!data.jumlah_dokter_umum || String(data.jumlah_dokter_umum).trim() === '') {
+                    stepErrors.jumlah_dokter_umum = 'Jumlah dokter umum wajib diisi';
+                }
+                if (!data.rincian_dokter_spesialis || data.rincian_dokter_spesialis.trim() === '') {
+                    stepErrors.rincian_dokter_spesialis = 'Rincian dokter spesialis wajib diisi';
+                }
+                if (!data.jumlah_perawat || String(data.jumlah_perawat).trim() === '') {
+                    stepErrors.jumlah_perawat = 'Jumlah perawat wajib diisi';
+                }
+                if (!data.jumlah_bidan || String(data.jumlah_bidan).trim() === '') {
+                    stepErrors.jumlah_bidan = 'Jumlah bidan wajib diisi';
+                }
+                if (!data.jumlah_apoteker || String(data.jumlah_apoteker).trim() === '') {
+                    stepErrors.jumlah_apoteker = 'Jumlah apoteker wajib diisi';
+                }
+                if (!data.jumlah_psikolog || String(data.jumlah_psikolog).trim() === '') {
+                    stepErrors.jumlah_psikolog = 'Jumlah psikolog wajib diisi';
+                }
+                if (!data.jumlah_staf_logistik || String(data.jumlah_staf_logistik).trim() === '') {
+                    stepErrors.jumlah_staf_logistik = 'Jumlah staf logistik wajib diisi';
+                }
+                if (!data.jumlah_staf_administrasi || String(data.jumlah_staf_administrasi).trim() === '') {
+                    stepErrors.jumlah_staf_administrasi = 'Jumlah staf administrasi wajib diisi';
+                }
+                if (!data.jumlah_petugas_keamanan || String(data.jumlah_petugas_keamanan).trim() === '') {
+                    stepErrors.jumlah_petugas_keamanan = 'Jumlah petugas keamanan wajib diisi';
+                }
+                break;
+
+            case 6: // Lampiran Dokumen
+                if (!data.surat_tugas_file) {
+                    stepErrors.surat_tugas_file = 'Surat tugas wajib diupload';
+                }
+                if (!data.scan_str_file) {
+                    stepErrors.scan_str_file = 'Scan STR anggota tim wajib diupload';
+                }
+                break;
         }
+
+        return stepErrors;
     };
 
     const handleNext = () => {
-        if (validateStep(currentStep)) {
-            setValidationError(''); // Clear error if validation passes
+        const stepErrors = validateStepFields(currentStep);
+        if (Object.keys(stepErrors).length === 0) {
+            setFieldErrors({});
+            setValidationError('');
             if (currentStep < totalSteps) {
                 const nextStep = currentStep + 1;
                 setCurrentStep(nextStep);
-                // Scroll to top when changing steps
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         } else {
-            // Show validation error message
-            const errorMessage = getValidationErrorMessage(currentStep);
-            setValidationError(errorMessage);
-            // Scroll to top to show error message
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setFieldErrors(stepErrors);
+            const firstErrorField = Object.keys(stepErrors)[0];
+            const element = document.getElementById(firstErrorField);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (element.tagName !== 'INPUT' || (element as HTMLInputElement).type !== 'hidden') {
+                    element.focus();
+                }
+            }
         }
     };
 
     const handlePrevious = () => {
+        setFieldErrors({});
+        setValidationError('');
         if (currentStep > 1) {
             const prevStep = currentStep - 1;
             setCurrentStep(prevStep);
-            // Scroll to top when changing steps
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
@@ -475,22 +475,19 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!validateStep(currentStep)) {
-            // Show validation error message
-            const errorMessage = getValidationErrorMessage(currentStep);
-            setValidationError(errorMessage);
-            // Scroll to top to show error message
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        const stepErrors = validateStepFields(currentStep);
+        if (Object.keys(stepErrors).length > 0) {
+            setFieldErrors(stepErrors);
+            const firstErrorField = Object.keys(stepErrors)[0];
+            const element = document.getElementById(firstErrorField);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (element.tagName !== 'INPUT' || (element as HTMLInputElement).type !== 'hidden') {
+                    element.focus();
+                }
+            }
             return;
         }
-
-        console.log('Submitting form with data:', {
-            ...data,
-            logistik_non_medis_files_count: data.logistik_non_medis_files.length,
-            logistik_medis_files_count: data.logistik_medis_files.length,
-            surat_tugas_file: data.surat_tugas_file ? data.surat_tugas_file.name : null,
-            scan_str_file: data.scan_str_file ? data.scan_str_file.name : null,
-        });
 
         post('/pendaftaran-dmt', {
             forceFormData: true,
@@ -498,19 +495,17 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                 reset();
                 setSelectedLayanan([]);
                 setCurrentStep(1);
+                setFieldErrors({});
                 setValidationError('');
                 clearSaved(); // Clear saved draft after successful submission
             },
             onError: (errors: Record<string, string | string[]>) => {
                 // Show validation errors from backend
-                console.error('Form submission errors:', errors);
-                const errorMessages = Object.values(errors).flat();
-                const errorMessage = errorMessages.length > 0
-                    ? errorMessages.join('. ')
-                    : 'Terjadi kesalahan saat mengirim pendaftaran. Silakan periksa kembali data yang diisi.';
-                setValidationError(errorMessage);
-                // Scroll to top to show error message
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const backendFieldErrors: Record<string, string> = {};
+                for (const [key, msg] of Object.entries(errors)) {
+                    backendFieldErrors[key] = Array.isArray(msg) ? msg[0] : msg;
+                }
+                setFieldErrors(backendFieldErrors);
             },
         });
     };
@@ -556,12 +551,6 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                             </p>
                         </div>
 
-                        {validationError && (
-                            <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 text-sm font-medium text-red-700">
-                                {validationError}
-                            </div>
-                        )}
-
                         {/* Progress Indicator */}
                         <div className="mb-8">
                             <div className="flex items-center justify-between mb-2">
@@ -604,7 +593,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                             </div>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} noValidate className="space-y-6">
                             {/* Step 1: Data Rincian Tim */}
                             {currentStep === 1 && (
                                 <Card>
@@ -626,10 +615,10 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                 id="nama_dmt"
                                                 value={data.nama_dmt}
                                                 onChange={(e) => setData('nama_dmt', e.target.value)}
-                                                required
                                                 placeholder="Contoh: Tim DMT RS ABC"
+                                                className={inputErrorClass('nama_dmt')}
                                             />
-                                            <InputError message={errors.nama_dmt} />
+                                            <InputError message={getFieldError('nama_dmt')} />
                                         </div>
 
                                         <div className="space-y-2">
@@ -640,9 +629,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                 id="nama_ketua_tim"
                                                 value={data.nama_ketua_tim}
                                                 onChange={(e) => setData('nama_ketua_tim', e.target.value)}
-                                                required
+                                                className={inputErrorClass('nama_ketua_tim')}
                                             />
-                                            <InputError message={errors.nama_ketua_tim} />
+                                            <InputError message={getFieldError('nama_ketua_tim')} />
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -655,9 +644,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     type="date"
                                                     value={data.tanggal_kedatangan}
                                                     onChange={(e) => setData('tanggal_kedatangan', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('tanggal_kedatangan')}
                                                 />
-                                                <InputError message={errors.tanggal_kedatangan} />
+                                                <InputError message={getFieldError('tanggal_kedatangan')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -670,9 +659,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="1"
                                                     value={data.masa_penugasan_hari}
                                                     onChange={(e) => setData('masa_penugasan_hari', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('masa_penugasan_hari')}
                                                 />
-                                                <InputError message={errors.masa_penugasan_hari} />
+                                                <InputError message={getFieldError('masa_penugasan_hari')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -684,9 +673,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     type="date"
                                                     value={data.tanggal_pelayanan_dimulai}
                                                     onChange={(e) => setData('tanggal_pelayanan_dimulai', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('tanggal_pelayanan_dimulai')}
                                                 />
-                                                <InputError message={errors.tanggal_pelayanan_dimulai} />
+                                                <InputError message={getFieldError('tanggal_pelayanan_dimulai')} />
                                             </div>
                                         </div>
 
@@ -701,8 +690,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     value={data.tanggal_pelayanan_diakhiri}
                                                     onChange={(e) => setData('tanggal_pelayanan_diakhiri', e.target.value)}
                                                     min={data.tanggal_pelayanan_dimulai}
+                                                    className={inputErrorClass('tanggal_pelayanan_diakhiri')}
                                                 />
-                                                <InputError message={errors.tanggal_pelayanan_diakhiri} />
+                                                <InputError message={getFieldError('tanggal_pelayanan_diakhiri')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -714,8 +704,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     type="date"
                                                     value={data.rencana_tanggal_kepulangan}
                                                     onChange={(e) => setData('rencana_tanggal_kepulangan', e.target.value)}
+                                                    className={inputErrorClass('rencana_tanggal_kepulangan')}
                                                 />
-                                                <InputError message={errors.rencana_tanggal_kepulangan} />
+                                                <InputError message={getFieldError('rencana_tanggal_kepulangan')} />
                                             </div>
                                         </div>
                                     </CardContent>
@@ -744,9 +735,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     id="nama_nara_hubung"
                                                     value={data.nama_nara_hubung}
                                                     onChange={(e) => setData('nama_nara_hubung', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('nama_nara_hubung')}
                                                 />
-                                                <InputError message={errors.nama_nara_hubung} />
+                                                <InputError message={getFieldError('nama_nara_hubung')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -757,9 +748,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     id="posisi_jabatan"
                                                     value={data.posisi_jabatan}
                                                     onChange={(e) => setData('posisi_jabatan', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('posisi_jabatan')}
                                                 />
-                                                <InputError message={errors.posisi_jabatan} />
+                                                <InputError message={getFieldError('posisi_jabatan')} />
                                             </div>
                                         </div>
 
@@ -773,9 +764,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     type="email"
                                                     value={data.email}
                                                     onChange={(e) => setData('email', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('email')}
                                                 />
-                                                <InputError message={errors.email} />
+                                                <InputError message={getFieldError('email')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -787,9 +778,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     type="tel"
                                                     value={data.nomor_hp}
                                                     onChange={(e) => setData('nomor_hp', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('nomor_hp')}
                                                 />
-                                                <InputError message={errors.nomor_hp} />
+                                                <InputError message={getFieldError('nomor_hp')} />
                                             </div>
                                         </div>
                                     </CardContent>
@@ -813,15 +804,17 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                             <Label htmlFor="logistik_non_medis">
                                                 Logistik Non Medis <span className="text-red-500">*</span>
                                             </Label>
-                                            <Textarea
+                                            <TagInput
                                                 id="logistik_non_medis"
                                                 value={data.logistik_non_medis}
-                                                onChange={(e) => setData('logistik_non_medis', e.target.value)}
-                                                required
-                                                placeholder="Contoh: tenda 10 unit, genset 3 unit, penjernih air 15 unit, laptop 4 unit, HT 3 unit. Jika sudah ada dokumen logistik, upload dokumen dan tuliskan 'terlampir' di bagian ini."
-                                                rows={4}
+                                                onChange={(csv) => setData('logistik_non_medis', csv)}
+                                                placeholder="Contoh: tenda 10 unit (Enter), genset 3 unit (Enter), …"
+                                                className={inputErrorClass('logistik_non_medis')}
                                             />
-                                            <InputError message={errors.logistik_non_medis} />
+                                            <p className="text-xs text-muted-foreground">
+                                                Ketik setiap item lalu tekan <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">Enter</kbd> atau <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">,</kbd> untuk menambahkan. Jika sudah ada dokumen, tulis <em>terlampir</em> dan upload di bawah.
+                                            </p>
+                                            <InputError message={getFieldError('logistik_non_medis')} />
                                         </div>
 
                                         <div className="space-y-2">
@@ -885,22 +878,24 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     </div>
                                                 </div>
                                             )}
-                                            <InputError message={errors.logistik_non_medis_files} />
+                                            <InputError message={getFieldError('logistik_non_medis_files')} />
                                         </div>
 
                                         <div className="space-y-2">
                                             <Label htmlFor="logistik_medis">
                                                 Logistik Medis <span className="text-red-500">*</span>
                                             </Label>
-                                            <Textarea
+                                            <TagInput
                                                 id="logistik_medis"
                                                 value={data.logistik_medis}
-                                                onChange={(e) => setData('logistik_medis', e.target.value)}
-                                                required
-                                                placeholder="Jika sudah ada dokumen logistik, upload dokumen dan tuliskan 'terlampir' di bagian ini."
-                                                rows={4}
+                                                onChange={(csv) => setData('logistik_medis', csv)}
+                                                placeholder="Contoh: obat-obatan darurat, peralatan bedah minor, alat monitor vital, …"
+                                                className={inputErrorClass('logistik_medis')}
                                             />
-                                            <InputError message={errors.logistik_medis} />
+                                            <p className="text-xs text-muted-foreground">
+                                                Ketik setiap item lalu tekan <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">Enter</kbd> atau <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">,</kbd> untuk menambahkan. Jika sudah ada dokumen, tulis <em>terlampir</em> dan upload di bawah.
+                                            </p>
+                                            <InputError message={getFieldError('logistik_medis')} />
                                         </div>
 
                                         <div className="space-y-2">
@@ -964,7 +959,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     </div>
                                                 </div>
                                             )}
-                                            <InputError message={errors.logistik_medis_files} />
+                                            <InputError message={getFieldError('logistik_medis_files')} />
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -994,9 +989,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.kapasitas_rawat_jalan}
                                                     onChange={(e) => setData('kapasitas_rawat_jalan', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('kapasitas_rawat_jalan')}
                                                 />
-                                                <InputError message={errors.kapasitas_rawat_jalan} />
+                                                <InputError message={getFieldError('kapasitas_rawat_jalan')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1009,9 +1004,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.kapasitas_rawat_inap}
                                                     onChange={(e) => setData('kapasitas_rawat_inap', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('kapasitas_rawat_inap')}
                                                 />
-                                                <InputError message={errors.kapasitas_rawat_inap} />
+                                                <InputError message={getFieldError('kapasitas_rawat_inap')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1024,9 +1019,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.kapasitas_operasi_bedah_mayor}
                                                     onChange={(e) => setData('kapasitas_operasi_bedah_mayor', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('kapasitas_operasi_bedah_mayor')}
                                                 />
-                                                <InputError message={errors.kapasitas_operasi_bedah_mayor} />
+                                                <InputError message={getFieldError('kapasitas_operasi_bedah_mayor')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1039,9 +1034,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.kapasitas_operasi_bedah_minor}
                                                     onChange={(e) => setData('kapasitas_operasi_bedah_minor', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('kapasitas_operasi_bedah_minor')}
                                                 />
-                                                <InputError message={errors.kapasitas_operasi_bedah_minor} />
+                                                <InputError message={getFieldError('kapasitas_operasi_bedah_minor')} />
                                             </div>
                                         </div>
 
@@ -1066,7 +1061,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     </div>
                                                 ))}
                                             </div>
-                                            <InputError message={errors.jenis_layanan_tersedia} />
+                                            <InputError message={getFieldError('jenis_layanan_tersedia')} />
                                         </div>
 
                                         <div className="space-y-2">
@@ -1078,8 +1073,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                 value={data.jenis_layanan_lainnya}
                                                 onChange={(e) => setData('jenis_layanan_lainnya', e.target.value)}
                                                 placeholder="Tuliskan jenis layanan lainnya jika ada"
+                                                className={inputErrorClass('jenis_layanan_lainnya')}
                                             />
-                                            <InputError message={errors.jenis_layanan_lainnya} />
+                                            <InputError message={getFieldError('jenis_layanan_lainnya')} />
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -1109,23 +1105,26 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.jumlah_dokter_umum}
                                                     onChange={(e) => setData('jumlah_dokter_umum', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('jumlah_dokter_umum')}
                                                 />
-                                                <InputError message={errors.jumlah_dokter_umum} />
+                                                <InputError message={getFieldError('jumlah_dokter_umum')} />
                                             </div>
 
                                             <div className="space-y-2">
                                                 <Label htmlFor="rincian_dokter_spesialis">
                                                     Rincian Dokter Spesialis <span className="text-red-500">*</span>
                                                 </Label>
-                                                <Input
+                                                <TagInput
                                                     id="rincian_dokter_spesialis"
                                                     value={data.rincian_dokter_spesialis}
-                                                    onChange={(e) => setData('rincian_dokter_spesialis', e.target.value)}
-                                                    required
-                                                    placeholder="Contoh: Bedah - 1, Anak - 1, Anestesi - 2"
+                                                    onChange={(csv) => setData('rincian_dokter_spesialis', csv)}
+                                                    placeholder="Contoh: Bedah - 1 (Enter), Anak - 1 (Enter), …"
+                                                    className={inputErrorClass('rincian_dokter_spesialis')}
                                                 />
-                                                <InputError message={errors.rincian_dokter_spesialis} />
+                                                <p className="text-xs text-muted-foreground">
+                                                    Ketik setiap spesialisasi lalu tekan <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">Enter</kbd> atau <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">,</kbd>.
+                                                </p>
+                                                <InputError message={getFieldError('rincian_dokter_spesialis')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1138,9 +1137,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.jumlah_perawat}
                                                     onChange={(e) => setData('jumlah_perawat', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('jumlah_perawat')}
                                                 />
-                                                <InputError message={errors.jumlah_perawat} />
+                                                <InputError message={getFieldError('jumlah_perawat')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1153,9 +1152,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.jumlah_bidan}
                                                     onChange={(e) => setData('jumlah_bidan', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('jumlah_bidan')}
                                                 />
-                                                <InputError message={errors.jumlah_bidan} />
+                                                <InputError message={getFieldError('jumlah_bidan')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1168,9 +1167,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.jumlah_apoteker}
                                                     onChange={(e) => setData('jumlah_apoteker', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('jumlah_apoteker')}
                                                 />
-                                                <InputError message={errors.jumlah_apoteker} />
+                                                <InputError message={getFieldError('jumlah_apoteker')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1183,9 +1182,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.jumlah_psikolog}
                                                     onChange={(e) => setData('jumlah_psikolog', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('jumlah_psikolog')}
                                                 />
-                                                <InputError message={errors.jumlah_psikolog} />
+                                                <InputError message={getFieldError('jumlah_psikolog')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1198,9 +1197,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.jumlah_staf_logistik}
                                                     onChange={(e) => setData('jumlah_staf_logistik', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('jumlah_staf_logistik')}
                                                 />
-                                                <InputError message={errors.jumlah_staf_logistik} />
+                                                <InputError message={getFieldError('jumlah_staf_logistik')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1213,9 +1212,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.jumlah_staf_administrasi}
                                                     onChange={(e) => setData('jumlah_staf_administrasi', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('jumlah_staf_administrasi')}
                                                 />
-                                                <InputError message={errors.jumlah_staf_administrasi} />
+                                                <InputError message={getFieldError('jumlah_staf_administrasi')} />
                                             </div>
 
                                             <div className="space-y-2">
@@ -1228,9 +1227,9 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     min="0"
                                                     value={data.jumlah_petugas_keamanan}
                                                     onChange={(e) => setData('jumlah_petugas_keamanan', e.target.value)}
-                                                    required
+                                                    className={inputErrorClass('jumlah_petugas_keamanan')}
                                                 />
-                                                <InputError message={errors.jumlah_petugas_keamanan} />
+                                                <InputError message={getFieldError('jumlah_petugas_keamanan')} />
                                             </div>
                                         </div>
                                     </CardContent>
@@ -1266,6 +1265,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                 <Button
                                                     type="button"
                                                     variant="outline"
+                                                    className={inputErrorClass('surat_tugas_file')}
                                                     onClick={() => suratTugasInputRef.current?.click()}
                                                 >
                                                     Pilih File
@@ -1305,7 +1305,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     </div>
                                                 </div>
                                             )}
-                                            <InputError message={errors.surat_tugas_file} />
+                                            <InputError message={getFieldError('surat_tugas_file')} />
                                         </div>
 
                                         <div className="space-y-2">
@@ -1324,6 +1324,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                 <Button
                                                     type="button"
                                                     variant="outline"
+                                                    className={inputErrorClass('scan_str_file')}
                                                     onClick={() => scanStrInputRef.current?.click()}
                                                 >
                                                     Pilih File
@@ -1363,7 +1364,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     </div>
                                                 </div>
                                             )}
-                                            <InputError message={errors.scan_str_file} />
+                                            <InputError message={getFieldError('scan_str_file')} />
                                         </div>
 
                                         <div className="space-y-2">
@@ -1382,6 +1383,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                 <Button
                                                     type="button"
                                                     variant="outline"
+                                                    className={inputErrorClass('daftar_nama_anggota_file')}
                                                     onClick={() => daftarNamaInputRef.current?.click()}
                                                 >
                                                     Pilih File
@@ -1421,7 +1423,7 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                                     </div>
                                                 </div>
                                             )}
-                                            <InputError message={errors.daftar_nama_anggota_file} />
+                                            <InputError message={getFieldError('daftar_nama_anggota_file')} />
                                         </div>
                                     </CardContent>
                                 </Card>

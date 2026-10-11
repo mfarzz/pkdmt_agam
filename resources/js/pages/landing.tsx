@@ -11,7 +11,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { login } from '@/routes';
 import { Head, Link, usePage, router } from '@inertiajs/react';
-import { Activity, BookOpen, Calendar, CheckCircle, FileText, Image as ImageIcon, Info, LogIn, Shield, Users, User, LogOut } from 'lucide-react';
+import { Activity, BookOpen, Calendar, CheckCircle, FileText, Image as ImageIcon, Info, Loader2, LogIn, Shield, Users, User, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useInitials } from '@/hooks/use-initials';
 import { type SharedData } from '@/types';
@@ -24,6 +24,7 @@ interface LandingProps {
 export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps) {
     const [countBencana, setCountBencana] = useState(0);
     const [countTim, setCountTim] = useState(0);
+    const [isLoadingLogin, setIsLoadingLogin] = useState(false);
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
@@ -181,9 +182,20 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : (
-                        <Link href={login()}>
-                            <Button variant="secondary" className="bg-white/90 hover:bg-white text-orange-700 hover:text-orange-800 font-semibold shadow-lg backdrop-blur-sm transition-all hover:scale-105">
-                                <LogIn className="h-4 w-4 mr-2" />
+                        <Link
+                            href={login()}
+                            onClick={() => setIsLoadingLogin(true)}
+                        >
+                            <Button
+                                variant="secondary"
+                                disabled={isLoadingLogin}
+                                className="bg-white/70 hover:bg-white text-orange-700 hover:text-orange-800 font-semibold transition-all disabled:opacity-80"
+                            >
+                                {isLoadingLogin ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <LogIn className="h-4 w-4 mr-2" />
+                                )}
                                 Masuk Sistem
                             </Button>
                         </Link>
@@ -206,11 +218,6 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
                 <div className="absolute top-1/2 -left-24 h-72 w-72 rounded-full bg-yellow-400/20 blur-3xl"></div>
 
                 <div className="container relative mx-auto z-10 text-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-sm font-medium mb-6 backdrop-blur-md border border-white/20 animate-fade-in-up">
-                        <Activity className="h-4 w-4" />
-                        <span>Siaga Bencana 24/7</span>
-                    </div>
-
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight mb-6 leading-tight drop-shadow-sm animate-fade-in-up [animation-delay:100ms]">
                         Health Emergency <br className="hidden md:block" />
                         <span className="text-orange-100">Operation Center</span>
@@ -262,8 +269,8 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
                                     href={item.href}
                                     className="group relative"
                                 >
-                                    <div className="absolute inset-0 bg-orange-500/5 rounded-2xl transform transition-transform group-hover:scale-105 group-hover:bg-orange-500/10"></div>
-                                    <Card className="h-full border-0 shadow-sm hover:shadow-xl transition-all duration-300 relative bg-card/80 backdrop-blur-sm overflow-hidden group-hover:-translate-y-1">
+                                    <div className="absolute inset-0 bg-orange-500/5 rounded-2xl transform transition-transform group-hover:scale-105"></div>
+                                    <Card className="h-full border-0 transition-all duration-300 relative bg-card/80 overflow-hidden group-hover:-translate-y-1">
                                         <CardContent className="p-6 flex flex-col items-center text-center h-full">
                                             <div className={`mb-4 p-4 rounded-2xl transition-all duration-300 ${item.color} ${item.hoverColor} shadow-inner`}>
                                                 <Icon className="h-8 w-8" />
@@ -288,7 +295,7 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row items-center gap-12">
                         <div className="w-full md:w-1/2">
-                            <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white dark:border-stone-800">
+                            <div className="relative overflow-hidden">
                                 <img
                                     src="image/landing/bencana.jpg"
                                     alt="Medical Team"
@@ -300,10 +307,6 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
                             </div>
                         </div>
                         <div className="w-full md:w-1/2 space-y-6">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wide">
-                                <Shield className="h-3 w-3" />
-                                Misi Kemanusiaan
-                            </div>
                             <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
                                 Bersinergi Untuk <span className="text-primary">Agam Lebih Tangguh</span>
                             </h2>
@@ -338,7 +341,7 @@ export default function Landing({ totalBencana = 0, totalTim = 0 }: LandingProps
                                     <img
                                         src={logo.image}
                                         alt={logo.name}
-                                        className="max-h-full max-w-full object-contain drop-shadow-sm"
+                                        className="max-h-full max-w-full object-contain"
                                         loading="lazy"
                                     />
                                 </div>
