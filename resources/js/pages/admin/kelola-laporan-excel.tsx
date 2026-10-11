@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
 import { Spinner } from '@/components/ui/spinner';
 import { FileSpreadsheet, Upload, Download, Trash2 } from 'lucide-react';
 import { useState } from 'react';

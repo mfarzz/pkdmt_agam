@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, Link2, FileText, FileSpreadsheet, AlertCircle, CheckCircle2, Image, FileCheck, LayoutDashboard, LayoutGrid, AlertTriangle, ChevronDown, ChevronUp, Upload, Calendar, FileType } from 'lucide-react';
+import { BookOpen, FileText, FileSpreadsheet, AlertCircle, Image, FileCheck, LayoutDashboard, LayoutGrid, AlertTriangle, ChevronDown, ChevronUp, Calendar, FileType } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';

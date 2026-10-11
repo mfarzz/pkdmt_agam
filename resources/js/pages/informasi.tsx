@@ -20,7 +20,7 @@ import {
 import { Head, Link, router } from '@inertiajs/react';
 import { CheckCircle, ChevronLeft, ChevronRight, Eye, Mail, Phone, Search, Users, XCircle, X, Activity, Stethoscope, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeft } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -387,7 +387,6 @@ function DetailDialog({ dmt }: { dmt: DmtData }) {
 
 export default function Informasi({ dmtData, statistics, aggregateData, jenisLayananData = [], activeDisasterName, sortBy: initialSortBy = 'tanggal_kedatangan', sortOrder: initialSortOrder = 'desc' }: InformasiProps) {
     const { url } = usePage();
-    const urlParams = new URLSearchParams(url.split('?')[1] || '');
 
     const partners = [
         { name: 'Pemkab Agam', image: '/image/Logo_Agam_Regency.png' },
@@ -467,7 +466,6 @@ export default function Informasi({ dmtData, statistics, aggregateData, jenisLay
         // Get current URL without hash
         const currentPath = window.location.pathname;
         const currentSearch = window.location.search;
-        const currentUrl = currentPath + currentSearch;
 
         // Only navigate if filter parameters actually changed (ignore page param)
         const currentParamsWithoutPage = new URLSearchParams(currentSearch);

@@ -29,6 +29,13 @@ const jenisLayananOptions = [
     'Ruang Isolasi',
 ];
 
+// Email validation helper – declared at module level to avoid temporal dead zone issues
+const isValidEmail = (email: string): boolean => {
+    if (!email || email.trim() === '') return false;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+};
+
 export default function PendaftaranDmt({ activeDisasterName, success }: PendaftaranDmtProps) {
     const { data, setData, post, processing, errors, reset } = useForm({
         // Data Rincian Tim
@@ -90,7 +97,6 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
         return 1;
     });
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-    const [validationError, setValidationError] = useState<string>('');
     const [showSuccessModal, setShowSuccessModal] = useState<boolean>(!!success);
     const totalSteps = 6;
     const logistikNonMedisInputRef = useRef<HTMLInputElement>(null);
@@ -188,37 +194,33 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
         // Clear validation errors when step changes
         const timer = setTimeout(() => {
             setFieldErrors({});
-            setValidationError('');
         }, 0);
         return () => clearTimeout(timer);
     }, [currentStep]);
 
     // Automatically clear error for a field once user fills/fixes it
     useEffect(() => {
-        setFieldErrors((prev) => {
-            if (Object.keys(prev).length === 0) return prev;
-            let changed = false;
-            const updated = { ...prev };
-            for (const key of Object.keys(updated)) {
-                const val = data[key as keyof typeof data];
-                if (key === 'email') {
-                    if (val && typeof val === 'string' && isValidEmail(val)) {
-                        delete updated[key];
-                        changed = true;
-                    }
-                } else if (key === 'jenis_layanan_tersedia') {
-                    if (Array.isArray(val) && val.length > 0) {
-                        delete updated[key];
-                        changed = true;
-                    }
-                } else if (val !== null && val !== undefined && val !== '') {
-                    delete updated[key];
-                    changed = true;
-                }
+        if (Object.keys(fieldErrors).length === 0) return;
+        const updated = { ...fieldErrors };
+        let changed = false;
+        for (const key of Object.keys(updated)) {
+            const val = data[key as keyof typeof data];
+            const shouldClear =
+                key === 'email'
+                    ? val && typeof val === 'string' && isValidEmail(val)
+                    : key === 'jenis_layanan_tersedia'
+                      ? Array.isArray(val) && val.length > 0
+                      : val !== null && val !== undefined && val !== '';
+            if (shouldClear) {
+                delete updated[key];
+                changed = true;
             }
-            return changed ? updated : prev;
-        });
-    }, [data]);
+        }
+        if (changed) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setFieldErrors(updated);
+        }
+    }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Show success modal when success prop is available
     useEffect(() => {
@@ -320,13 +322,6 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
         return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-    };
-
-    // Email validation helper
-    const isValidEmail = (email: string): boolean => {
-        if (!email || email.trim() === '') return false;
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email.trim());
     };
 
     // Validation for current step - returns field-specific errors
@@ -443,7 +438,6 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
         const stepErrors = validateStepFields(currentStep);
         if (Object.keys(stepErrors).length === 0) {
             setFieldErrors({});
-            setValidationError('');
             if (currentStep < totalSteps) {
                 const nextStep = currentStep + 1;
                 setCurrentStep(nextStep);
@@ -464,7 +458,6 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
 
     const handlePrevious = () => {
         setFieldErrors({});
-        setValidationError('');
         if (currentStep > 1) {
             const prevStep = currentStep - 1;
             setCurrentStep(prevStep);
@@ -496,7 +489,6 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                 setSelectedLayanan([]);
                 setCurrentStep(1);
                 setFieldErrors({});
-                setValidationError('');
                 clearSaved(); // Clear saved draft after successful submission
             },
             onError: (errors: Record<string, string | string[]>) => {
@@ -1461,7 +1453,6 @@ export default function PendaftaranDmt({ activeDisasterName, success }: Pendafta
                                             reset();
                                             setSelectedLayanan([]);
                                             setCurrentStep(1);
-                                            setValidationError('');
                                         }}
                                     >
                                         Reset Form

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, FileText, Eye, Trash2, ExternalLink } from 'lucide-react';
+import { Upload, FileText, Eye, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import {
     Dialog,

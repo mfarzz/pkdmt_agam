@@ -431,7 +431,7 @@ export default function Notulensi({ notulensiLinks = [], activeDisasterName }: N
                                                                                             const imagesContainer = document.createElement('div');
                                                                                             imagesContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
                                                                                             
-                                                                                            item.images?.forEach((img, imgIndex) => {
+                                                                                            item.images?.forEach((img) => {
                                                                                                 const imgDiv = document.createElement('div');
                                                                                                 imgDiv.className = 'space-y-2';
                                                                                                 imgDiv.innerHTML = `
@@ -590,7 +590,7 @@ export default function Notulensi({ notulensiLinks = [], activeDisasterName }: N
                                                                                             const imagesContainer = document.createElement('div');
                                                                                             imagesContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
                                                                                             
-                                                                                            item.images?.forEach((img, imgIndex) => {
+                                                                                            item.images?.forEach((img) => {
                                                                                                 const imgDiv = document.createElement('div');
                                                                                                 imgDiv.className = 'space-y-2';
                                                                                                 imgDiv.innerHTML = `

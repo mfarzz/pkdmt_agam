@@ -12,7 +12,7 @@ export interface ToastProps {
 }
 
 const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
-    ({ id, title, description, variant = 'default', duration = 5000, onClose }, ref) => {
+    ({ title, description, variant = 'default', duration = 5000, onClose }, ref) => {
         React.useEffect(() => {
             if (variant !== 'loading' && duration > 0) {
                 const timer = setTimeout(() => {

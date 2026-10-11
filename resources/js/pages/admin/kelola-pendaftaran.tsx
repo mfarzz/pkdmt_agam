@@ -180,7 +180,6 @@ export default function KelolaPendaftaran({ registrations, success, error }: Kel
         // Get current URL without hash
         const currentPath = window.location.pathname;
         const currentSearch = window.location.search;
-        const currentUrl = currentPath + currentSearch;
 
         // Only navigate if filter parameters actually changed (ignore page param)
         const currentParamsWithoutPage = new URLSearchParams(currentSearch);
@@ -358,7 +357,7 @@ export default function KelolaPendaftaran({ registrations, success, error }: Kel
                     preserveScroll: true,
                 });
             },
-            onError: (errors) => {
+            onError: () => {
                 setIsSyncing(false);
                 // Error will be shown via session flash message
             },

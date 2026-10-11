@@ -11,7 +11,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { login } from '@/routes';
 import { Head, Link, usePage, router } from '@inertiajs/react';
-import { Activity, BookOpen, Calendar, CheckCircle, FileText, Image as ImageIcon, Info, Loader2, LogIn, Shield, Users, User, LogOut } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle, FileText, Image as ImageIcon, Info, Loader2, LogIn, Users, User, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useInitials } from '@/hooks/use-initials';
 import { type SharedData } from '@/types';
